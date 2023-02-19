@@ -26,6 +26,35 @@ public:
 		m = s / 60;
 		s -= m * 60;
 	}
+	static void time_round(int& s, int& d) {
+		while (s < 0) {
+			s += 86400;
+			d--;
+		}
+		while (s >= 86400) {
+			s -= 86400;
+			d++;
+		}
+	}
+	static int time_round(int s) {
+		while (s < 0) {
+			s += 86400;
+		}
+		while (s >= 86400) {
+			s -= 86400;
+		}
+		return s;
+	}
+	void time_round(int &s, int &d) {
+		while (s < 0) {
+			s += 86400;
+			d--;
+		}
+		while (s >= 86400) {
+			s -= 86400;
+			d++;
+		}
+	}
 	int seconds() { return this->sec; }
 	int second() {
 		int h = 0, m = 0, s = this->sec;
@@ -242,6 +271,17 @@ public:
 	}
 private:
 	long long int sec = 0;
+	long long int den = 0;
+	void time_round() {
+		while (this->sec < 0) {
+			this->sec += 86400;
+			this->den--;
+		}
+		while (this->sec >= 86400) {
+			this->sec -= 86400;
+			this->den++;
+		}
+	}
 	void time_sort(int& h, int& m, int& s) {
 		s += (h * 3600) + (m * 60);
 		s %= 86400;
