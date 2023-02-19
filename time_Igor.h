@@ -3,6 +3,7 @@ using namespace std;
 
 class Time {
 public:
+	//Конструкторы
 	Time() {}
 	Time(int tim) {
 		while (tim < 0) { tim += 86400; }
@@ -18,6 +19,7 @@ public:
 	Time(const char* tim) {
 		this->sec = forchar(tim);
 	}
+	//Статик
 	static void time_sorted(int& h, int& m, int& s) {
 		s += (h * 3600) + (m * 60);
 		s %= 86400;
@@ -26,7 +28,7 @@ public:
 		m = s / 60;
 		s -= m * 60;
 	}
-	static void time_round(int& s, int& d) {
+	static void timeround(int& s, int& d) {
 		while (s < 0) {
 			s += 86400;
 			d--;
@@ -36,7 +38,7 @@ public:
 			d++;
 		}
 	}
-	static int time_round(int s) {
+	static int timeround(int s) {
 		while (s < 0) {
 			s += 86400;
 		}
@@ -45,6 +47,20 @@ public:
 		}
 		return s;
 	}
+	//гет/сет
+	int Get_s() {
+		return this->sec;
+	}
+	int Get_d() {
+		return this->den;
+	}
+	void Set_s(int s) {
+		sec = s;
+	}
+	void Set_d(int d) {
+		den = d;
+	}
+	//Методы
 	void time_round(int &s, int &d) {
 		while (s < 0) {
 			s += 86400;
@@ -54,6 +70,9 @@ public:
 			s -= 86400;
 			d++;
 		}
+	}
+	int d() {
+		return this->den;
 	}
 	int seconds() { return this->sec; }
 	int second() {
@@ -71,6 +90,7 @@ public:
 		time_sort(h, m, s);
 		return h;
 	}
+	//Булевые операторы
 	//==
 	bool operator==(string tim) {
 		return this->sec == forstr(tim);
@@ -136,103 +156,125 @@ public:
 	bool operator>(Time& tim) {
 		return this->sec > tim.sec;
 	}
+	//Матиматические операторы
 	//-=
 	void operator-=(string tim) {
 		this->sec -= forstr(tim);
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator-=(char* tim) {
 		this->sec -= forchar(tim);
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator-=(int tim) {
 		this->sec -= tim;
-		while (this->sec < 0) { this->sec += 86400; }
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator-=(Time& tim) {
 		this->sec -= tim.sec;
-		this->sec %= 86400;
+		this->den -= tim.den;
+		time_round();
 	}
 	//-
 	Time& operator-(string tim) {
 		Time otv;
-		otv = (this->sec - forstr(tim)) % 86400;
+		int s = this->sec - forstr(tim);
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator-(char* tim) {
 		Time otv;
-		otv = (this->sec - forchar(tim)) % 86400;
+		int s = this->sec - forchar(tim);
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator-(int tim) {
 		Time otv;
-		int pr = this->sec - tim;
-		while (pr < 0) { pr += 86400; }
-		pr %= 86400;
-		otv = pr;
+		int s = this->sec - tim;
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator-(Time& tim) {
 		Time otv;
-		int pr = this->sec - tim.sec;
-		pr %= 86400;
-		otv = pr;
+		int s = this->sec - tim.sec;
+		int d = this->den - tim.den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	//+=
 	void operator+=(string tim) {
 		this->sec += forstr(tim);
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator+=(char* tim) {
 		this->sec += forchar(tim);
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator+=(int tim) {
 		this->sec += tim;
-		while (this->sec < 0) { this->sec += 86400; }
-		this->sec %= 86400;
+		time_round();
 	}
 	void operator+=(Time& tim) {
 		this->sec += tim.sec;
-		this->sec %= 86400;
+		this->den += tim.den;
+		time_round();
 	}
 	//+
 	Time& operator+(string tim) {
 		Time otv;
-		otv = (this->sec + forstr(tim)) % 86400;
+		int s = this->sec + forstr(tim);
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator+(char* tim) {
 		Time otv;
-		otv = (this->sec + forchar(tim)) % 86400;
+		int s = this->sec + forchar(tim);
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator+(int tim) {
 		Time otv;
-		int pr = this->sec + tim;
-		while (pr < 0) { pr += 86400; }
-		pr %= 86400;
-		otv = pr;
+		int s = this->sec + tim;
+		int d = this->den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	Time& operator+(Time& tim) {
 		Time otv;
-		int pr = this->sec + tim.sec;
-		pr %= 86400;
-		otv = pr;
+		int s = this->sec + tim.sec;
+		int d = this->den + tim.den;
+		time_round(s, d);
+		otv.Set_s(s);
+		otv.Set_d(d);
 		return otv;
 	}
 	//++/--
 	void operator++() {
-		this->sec++;
-		this->sec %= 86400;
+		this->sec+=1;
+		time_round();
 	}
 	void operator--() {
-		this->sec--;
-		while (this->sec < 0) { this->sec += 86400; }
-		this->sec %= 86400;
+		this->sec-=1;
+		time_round();
 	}
 	//=
 	Time& operator=(string tim) {
@@ -245,13 +287,12 @@ public:
 	}
 	Time& operator=(int tim) {
 		this->sec = tim;
-		this->sec %= 86400;
-		while (this->sec < 0) { this->sec += 86400; }
+		time_round();
 		return *this;
 	}
 	Time& operator=(Time& tim) {
 		this->sec = tim.sec;
-		this->sec %= 86400;
+		this->den = tim.den;
 		return *this;
 	}
 	//out/in
@@ -270,8 +311,8 @@ public:
 		return in;
 	}
 private:
-	long long int sec = 0;
-	long long int den = 0;
+	int sec = 0;
+	int den = 0;
 	void time_round() {
 		while (this->sec < 0) {
 			this->sec += 86400;

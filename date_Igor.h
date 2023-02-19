@@ -51,38 +51,59 @@ public:
 	}
 	//общедоступные методы:
 	void date_count(int& d, int& m, int& g) {
-		//const int sp_mes[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 		d = this->den, m = 0, g = 0;
 		int zn = 1;
 		if (d <= 0) { zn = -1; d = (d * -1) + 1; }
 		to_date(d, m, g);
-		d += ((g % 4 == 0) ? (sum_mes_v[m]) : (sum_mes[m]));
-		m = 0;
-		int j = 1;
 		if (g % 4 == 0) {
-			if (d == 366) { d = 0; g++; }
-			while (d >= sp_mes_v[j]) {
-				d -= sp_mes_v[j];
-				j++;
-				m++;
-			}
+			if (d == sp_mes_v[m]) { d = 1; m++; }
 		}
 		else {
-			if (d == 365) { d = 0; g++; }
-			while (d >= sp_mes[j]) {
-				d -= sp_mes[j];
-				j++;
-				m++;
-			}
+			if (d == sp_mes[m]) { d = 1; m++; }
 		}
-		if (m == 12) { m -= 12; g++; }
-		g--;
 		d--;
+		m--;
+		if (m >= 12) { m -= 12; g++; }
+		g--;
 		g *= zn;
 		m *= zn;
 		d *= zn;
 	}
-	int days() { return this->den; }
+	//void date_count(int& d, int& m, int& g) {
+	//	//const int sp_mes[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	//	d = this->den, m = 0, g = 0;
+	//	int zn = 1;
+	//	if (d <= 0) { zn = -1; d = (d * -1) + 1; }
+	//	to_date(d, m, g);
+	//	d += ((g % 4 == 0) ? (sum_mes_v[m]) : (sum_mes[m]));
+	//	m = 0;
+	//	int j = 1;
+	//	if (g % 4 == 0) {
+	//		if (d == 366) { d = 0; g++; }
+	//		while (d >= sp_mes_v[j]) {
+	//			d -= sp_mes_v[j];
+	//			j++;
+	//			m++;
+	//		}
+	//	}
+	//	else {
+	//		if (d == 365) { d = 0; g++; }
+	//		while (d >= sp_mes[j]) {
+	//			d -= sp_mes[j];
+	//			j++;
+	//			m++;
+	//		}
+	//	}
+	//	if (m == 12) { m -= 12; g++; }
+	//	g--;
+	//	d--;
+	//	g *= zn;
+	//	m *= zn;
+	//	d *= zn;
+	//}
+	int days() {
+		return this->den;
+	}
 	int day() {
 		int d = this->den, m = 0, g = 0, zn = 1;
 		if (d <= 0) { zn = -1; d = (d * -1) + 1; }
@@ -236,10 +257,10 @@ public:
 	}
 	//--++
 	void operator++() {
-		this->den++;
+		this->den+=1;
 	}
 	void operator--() {
-		this->den--;
+		this->den-=1;
 	}
 	//=
 	Date& operator=(char* dat) {
