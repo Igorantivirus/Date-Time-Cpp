@@ -3,7 +3,7 @@
 #include<string>
 using namespace std;
 namespace kak_u_Igorya {
-	string input(string txt) {//ќбычна€ функци€ инпут, как у питона!
+	string input(string txt = "") {//ќбычна€ функци€ инпут, как у питона!
 		SetConsoleCP(1251);
 		SetConsoleOutputCP(1251);
 		cout << txt;
@@ -11,7 +11,7 @@ namespace kak_u_Igorya {
 		getline(cin, tx);
 		return tx;
 	}
-	int input_int(string txt) {//тот же интуп но только дл€ инт
+	int input_int(string txt = "") {//тот же интуп но только дл€ инт
 		SetConsoleCP(1251);
 		SetConsoleOutputCP(1251);
 		cout << txt;
@@ -19,7 +19,7 @@ namespace kak_u_Igorya {
 		cin >> ch;
 		return ch;
 	}
-	bool input_bool(string txt) {//тот же интуп но только дл€ логических переменных
+	bool input_bool(string txt = "") {//тот же интуп но только дл€ логических переменных
 		SetConsoleCP(1251);
 		SetConsoleOutputCP(1251);
 		cout << txt;
@@ -27,7 +27,7 @@ namespace kak_u_Igorya {
 		cin >> ch;
 		return ch;
 	}
-	float input_float(string txt) {//тот же интуп но только дл€ чисел с плавающей зап€той
+	float input_float(string txt = "") {//тот же интуп но только дл€ чисел с плавающей зап€той
 		SetConsoleCP(1251);
 		SetConsoleOutputCP(1251);
 		cout << txt;
@@ -35,7 +35,7 @@ namespace kak_u_Igorya {
 		cin >> ch;
 		return ch;
 	}
-	double input_double(string txt) {//тот же интуп но только дл€ чисел с плавающей зап€той
+	double input_double(string txt = "") {//тот же интуп но только дл€ чисел с плавающей зап€той
 		SetConsoleCP(1251);
 		SetConsoleOutputCP(1251);
 		cout << txt;
@@ -53,19 +53,19 @@ namespace kak_u_Igorya {
 		return ch;
 	}
 
-	int toint(string ch) {//преобразует строку в инт
+	int toint(string ch, int els = 0) {//преобразует строку в инт
 		int otv = 0, zn = 1, in = 0;
 		if (ch[0] == '-') { in = 1; zn = -1; }
 		for (int i = in; i < ch.size(); i++) {
 			otv += (int(ch[i]) - 48) * pow(10, ch.size() - i - 1);
 		}
-		return otv * zn;
+		return ((to_string(otv * zn) == ch) ? (otv * zn) : (els));
 	}
-	float tofloat(string ch) {//преобразует строку в флот
-		int len = ch.size(), in = 0, zn = 1, nach = 0;
+	float tofloat(string ch, float els = 0) {//преобразует строку в флот
+		int len = ch.size(), in = len, zn = 1, nach = 0;
 		if (ch[0] == '-') { zn = -1, nach = 1; }
 		for (int i = nach; i < len; i++) {
-			if (ch[i] == '.') { in = i; break; }
+			if (ch[i] == '.' || ch[i] == ',') { in = i; break; }
 		}
 		float otv = 0;
 		for (int i = nach; i < in; i++) {
@@ -74,10 +74,17 @@ namespace kak_u_Igorya {
 		for (int i = in + 1; i < len; i++) {
 			otv += float(int(ch[i] - 48) / pow(10, i - in));
 		}
+		int sum = 0;
+		for (int i = in + 1; i < len; i++) { sum++; }
+		while (sum < 6) {
+			ch += "0";
+			sum++;
+		}
+		//return ((to_string(otv * zn) == ch) ? (otv * zn) : (els));
 		return otv * zn;
 	}
 	double todouble(string ch) {//преобразует строку в дабл
-		int len = ch.size(), in = 0, zn = 1, nach = 0;
+		int len = ch.size(), in = len, zn = 1, nach = 0;
 		if (ch[0] == '-') { zn = -1, nach = 1; }
 		for (int i = nach; i < len; i++) {
 			if (ch[i] == '.') { in = i; break; }
@@ -91,13 +98,11 @@ namespace kak_u_Igorya {
 		}
 		return otv * zn;
 	}
-	bool tobool(string ch) {//преобразует строку в бул
-		if (ch == "true" || ch == "True") { return 1; }
-		if (ch == "false" || ch == "False") { return 0; }
+	bool tobool(string ch, bool els = 1) {//преобразует строку в бул
+		if (ch == "true" || ch == "True" || ch == "1" || ch == "да" || ch == "ƒа" || ch == "yes" || ch == "Yes") { return 1; }
+		if (ch == "false" || ch == "False" || ch == "0" || ch == "нет" || ch == "Ќет" || ch == "no" || ch == "No") { return 0; }
 		else {
-			bool otv = int(ch[0]) - 48;
-			cout << ch[0] << endl;
-			return otv;
+			return els;
 		}
 	}
 

@@ -266,7 +266,7 @@ public:
 		return in;
 	}
 private:
-	long long int den = 0;
+	int den = 0;
 	const int sp_mes[13] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	const int sp_mes_v[13] = { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	const int sum_mes[14] = { 0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
