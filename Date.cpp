@@ -1,339 +1,502 @@
 #include "Date.hpp"
 
-namespace dt
+#include<chrono>
+#include<limits>
+
+void fillFromStrDate(const char* date, long long arr[3])
 {
-
-
-bool Leap(int year)
-{
-	return (!(year % 4) && (year % 100) || !(year % 400));
-}
-
-#pragma region class Date
-
-Date::Date() : _days(0) {}
-Date::Date(const char* date) {
-	Assign(date);
-}
-Date::Date(const std::string& date) {
-	Assign(date);
-}
-Date::Date(int days) {
-	Assign(days);
-}
-Date::Date(int day, int month, int year) {
-	Assign(day, month, year);
-}
-Date::Date(const Date& date) {
-	Assign(date);
-}
-
-Date& Date::Assign(int day, int month, int year) {
-	if (!IsDatable(abs(day), abs(month), abs(year))) {
-		return *this;
-	}
-	_days = ToDay(day, month, year);
-	if (year > 1) {
-		_days++;
-	}
-	return *this;
-}
-Date& Date::Assign(const char* date) {
 	if (date == nullptr) {
-		return *this;
+		return;
 	}
-	int arr[3] = {};
 	for (int DateCount = 0; DateCount < 3; DateCount++) {
 		if (date[0] == '\0') {
 			break;
 		}
-		arr[DateCount] = atoi(date);
+		arr[DateCount] = atoll(date);
 		if (date[0] == '-') {
 			date++;
 		}
 		for (; (date[0] >= '0' && date[0] <= '9'); date++) {}
 		date++;
 	}
-	return Assign(arr[0], arr[1], arr[2]);
 }
-Date& Date::Assign(const std::string& date) {
-	return Assign(date.c_str());
-}
-Date& Date::Assign(int days) {
-	_days = days;
-	return *this;
-}
-Date& Date::Assign(const Date& date) {
-	_days = date._days;
-	return *this;
-}
-
-bool Date::IsLeap() const {
-	int d, m, g;
-	ToDate(d, m, g);
-	return (!(g % 4) && (g % 100) || !(g % 400));
-}
-int Date::AllDays() const {
-	return _days;
-}
-int Date::Days() const {
-	int d = _days, m = 0, g = 0;
-	ToDate(d, m, g);
-	return d;
-}
-int Date::Months() const {
-	int d = _days, m = 0, g = 0;
-	ToDate(d, m, g);
-	return m;
-}
-int Date::Years() const {
-	int d = _days, m = 0, g = 0;
-	ToDate(d, m, g);
-	return g;
-}
-int Date::Weeks() const {
-	return _days / 7;
-}
-int Date::DayWeek() const {
-	return (_days % 7) + 1;
-}
-
-void Date::SetAllDays(int days) {
-	_days = days;
-}
-void Date::SetDay(int day) {
-	int d = _days, m, g;
-	ToDate(d, m, g);
-	Assign(day, m, g);
-}
-void Date::SetMonth(int month) {
-	int d = _days, m, g;
-	ToDate(d, m, g);
-	Assign(d, month, g);
-}
-void Date::SetYear(int year) {
-	int d = _days, m, g;
-	ToDate(d, m, g);
-	Assign(d, m, year);
-}
-void Date::SetWeeks(int weeks) {
-	_days = weeks * 7 - 1;
-}
-
-void Date::MakeOpposite() {
-	_days = (_days + 1) * -1;
-}
-
-Date& Date::operator=(const Date& date) {
-	_days = date._days;
-	return *this;
-}
-
-Date::operator std::string() {
-	std::string result = "";
-	int d = _days, m, g;
-	if (d < 0) {
-		result = '-';
-	}
-	ToDate(d, m, g);
-	d = abs(d);
-	m = abs(m);
-	g = abs(g);
-	char pr[7] = { char(d / 10 + '0'), char(d % 10 + '0'), ':',char(m / 10 + '0'), char(m % 10 + '0'), ':', '\0' };
-	result += pr;
-	return result + std::to_string(g);
-
-}
-
-bool Date::operator<(const Date& date) const {
-	return _days < date._days;
-}
-bool Date::operator>(const Date& date) const {
-	return _days > date._days;
-}
-bool Date::operator<=(const Date& date) const {
-	return _days <= date._days;
-}
-bool Date::operator>=(const Date& date) const {
-	return _days >= date._days;
-}
-bool Date::operator==(const Date& date) const {
-	return _days == date._days;
-}
-bool Date::operator!=(const Date& date) const {
-	return _days != date._days;
-}
-
-Date Date::operator+(const Date& date) const {
-	return Date(_days + date._days);
-}
-Date Date::operator-(const Date& date) const {
-	return Date(_days - date._days);
-}
-Date Date::operator*(int value) const {
-	return Date(_days * value);
-}
-Date Date::operator/(int value) const {
-	return Date(_days / value);
-}
-Date Date::operator%(int value) const {
-	return Date(_days % value);
-}
-
-Date& Date::operator+=(const Date& date) {
-	_days += date._days;
-	return *this;
-}
-Date& Date::operator-=(const Date& date) {
-	_days -= date._days;
-	return *this;
-}
-Date& Date::operator*=(int value) {
-	_days *= value;
-	return *this;
-}
-Date& Date::operator/=(int value) {
-	_days /= value;
-	return *this;
-}
-Date& Date::operator%=(int value) {
-	_days %= value;
-	return *this;
-}
-
-Date Date::operator++() {
-	_days++;
-	return *this;
-}
-Date Date::operator--() {
-	_days--;
-	return *this;
-}
-Date Date::operator++(int) {
-	Date pr = *this;
-	++(*this);
-	return pr;
-}
-Date Date::operator--(int) {
-	Date pr = *this;
-	--(*this);
-	return pr;
-}
-
-Date Date::Now(float TimeZone) {
-	return Date(static_cast<int>((std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + static_cast<long long>(TimeZone * 3600000)) / 86400000) + 719162);
-}
-Date Date::MaxDate() {
-	return Date(2147483646);
-}
-Date Date::MinDate() {
-	return Date(-2147483647);
-}
-
-void Date::ToDate(int& d, int& m, int& g) {//переводит день d в дату d:m:g
-	bool lowerZero = false;
-	if (d < 0) {
-		lowerZero = true;
-		d *= -1;
-		d--;
-	}
-	d++;
-	g = 1;
-	bool leapYear = (!(g % 4) && (g % 100) || !(g % 400));
-	while (d > (leapYear ? 366 : 365)) {
-		d -= (leapYear ? 366 : 365);
-		g++;
-		leapYear = (!(g % 4) && (g % 100) || !(g % 400));
-	}
-	m = 0;
-	const int* arr = leapYear ? days_in_month : days_in_month_leap;
-	while (d > arr[m]) {
-		d -= arr[m++];
-	}
-	m++;
-	if (lowerZero) {
-		d *= -1;
-	}
-}
-int Date::ToDay(int d, int m, int g) {//дата переводится в кол-во дней, прошедших с 01.01.1 по выведенной формуле: (d + (дни в месяце) + g * 365 + (g - 1) / 4 - g / 100 + g / 400 - 365)
-	bool lowerZero = false;
-	if (d < 0 || m < 0 || g < 0) {
-		d = abs(d);
-		m = abs(m);
-		g = abs(g);
-		lowerZero = true;
-	}
-	int result = static_cast<int>(d + ((((g % 4 == 0) && (g % 100 != 0)) || (g % 400 == 0)) ? (sum_month_days_leap[m]) : (sum_month_days[m])) + g * 365.2425 - 365 + ((g == 1) ? (0) : (-1)));
-	if (lowerZero) {
-		result = (result + 1) * -1;
-	}
-	return result;
-}
-bool Date::IsDatable(int d, int m, int g) {
-	if (m > 12 || m < 1 || g < 1) {
-		return false;
-	}
-	if (!Leap(g)) {
-		if (d < 1 || d > days_in_month[m - 1]) {
-			return false;
-		}
-	}
-	else if (d < 1 || d > days_in_month_leap[m - 1]) {
-		return false;
-	}
-	return true;
-}
-
-const int Date::days_in_month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-const int Date::days_in_month_leap[12] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-const int Date::sum_month_days[14] = { 0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-const int Date::sum_month_days_leap[14] = { 0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
-
-#pragma endregion
-
-std::ostream& operator<<(std::ostream& out, const Date& date) {
-	int d = date._days, m = 0, g = 0, zn = 1;
-	if (d < 0) {
-		out << '-';
-	}
-	date.ToDate(d, m, g);
-	d = abs(d);
-	m = abs(m);
-	g = abs(g);
-	out << d / 10 << d % 10 << ':' << m / 10 << m % 10 << ':' << g;
-	return out;
-}
-std::istream& operator>>(std::istream& in, Date& date) {
-	std::string pr;
-	std::getline(in, pr);
-	date.Assign(pr);
-	return in;
-}
-
-Date Opposite(const Date& date)
+void fillStrDate(const long long num, std::string& res, const char c)
 {
-	return Date((date.AllDays() + 1) * -1);
+	size_t pos;
+	const char pr[3] = { '%', c, '\0' };
+	if ((pos = res.find(pr)) == std::string::npos)
+		return;
+	int count = 1;
+	for (size_t i = pos + 2; i < res.size(); i++)
+		if (res[i] == c)
+			count++;
+	std::string newV = std::to_string(abs(num));
+	while (newV.size() < count)
+		newV = '0' + newV;
+	if (num < 0)
+		newV = '-' + newV;
+	res.replace(pos, count + 1, newV);
 }
 
-Date operator""_days(unsigned long long days) {
-	return Date(static_cast<int>(days));
-}
-Date operator""_day(unsigned long long days) {
-	return Date(static_cast<int>(days), 1, 1);
-}
-Date operator""_month(unsigned long long months) {
-	int years = static_cast<int>((months - 1) / 12 + 1);
-	months -= (years - 1) * 12;
-	return Date(1, static_cast<int>(months), years);
-}
-Date operator""_year(unsigned long long years) {
-	return Date(1, 1, static_cast<int>(years));
-}
-Date operator""_date(const char* date, size_t len) {
-	return Date(date);
+namespace dt
+{
+	const unsigned char Date::days_in_months[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+	const unsigned char Date::days_in_months_leap[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
+
+	const long long Date::maxValue = LLONG_MAX / 400 - 1;
+	const long long Date::minValue = LLONG_MIN / 400;
+
+	inline bool Leap(long long year)
+	{
+		return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+	}
+
+	#pragma region class Date
+
+	#pragma region Конструкторы
+
+	Date::Date() : days(0) {}
+	Date::Date(const char* date)
+	{
+		Assign(date);
+	}
+	Date::Date(const std::string& date)
+	{
+		Assign(date.c_str());
+	}
+	Date::Date(const char* date, const char* example)
+	{
+		Assign(date, example);
+	}
+	Date::Date(const std::string& date, const std::string& example)
+	{
+		Assign(date, example);
+	}
+	Date::Date(int day, int month, long long year)
+	{
+		Assign(day, month, year);
+	}
+	Date::Date(long long days) : days(days)
+	{
+		Round();
+	}
+	Date::Date(const Date& other) : days(other.days) {}
+
+	#pragma endregion
+
+	#pragma region Методы
+
+	void Date::Assign(const char* date)
+	{
+		long long arr[3] = {1,1,1};
+		fillFromStrDate(date, arr);
+		Assign(static_cast<int>(arr[0]), static_cast<int>(arr[1]), arr[2]);
+	}
+	void Date::Assign(const std::string& date)
+	{
+		Assign(date.c_str());
+	}
+	void Date::Assign(const char* date, const char* example)
+	{
+		long long arr[3] = {1,1,1};
+		fillFromStrDate(date, arr);
+		long long d = 1, m = 1, y = 1;
+		for (char i = 0; i < 3 && *example != '\0'; i++)
+		{
+			while (*example != '\0' && *example++ != '%') {}
+			if (*example == 'D')
+				d = arr[i];
+			else if (*example == 'M')
+				m = arr[i];
+			else if (*example == 'Y')
+				y = arr[i];
+		}
+		Assign(static_cast<int>(d), static_cast<int>(m), y);
+	}
+	void Date::Assign(const std::string& date, const std::string& example)
+	{
+		Assign(date.c_str(), example.c_str());
+	}
+	void Date::Assign(int day, int month, long long year)
+	{
+		if (!IsDatable(day, month, year))
+			return;
+		this->days = ToDay(day, month, year);
+	}
+	void Date::Assign(long long days)
+	{
+		this->days = days;
+		Round();
+	}
+	void Date::Assign(const Date& other)
+	{
+		this->days = other.days;
+	}
+
+	bool Date::IsLeap() const
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		return Leap(y);
+	}
+
+	Date& Date::SetAllDays(long long days)
+	{
+		this->days = days;
+		return* this;
+	}
+	Date& Date::SetDay(int day)
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		Assign(static_cast<int>(day), static_cast<int>(m), y);
+		return *this;
+	}
+	Date& Date::SetMonth(int month)
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		Assign(static_cast<int>(d), static_cast<int>(month), y);
+		return *this;
+	}
+	Date& Date::SetYear(long long year)
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		Assign(static_cast<int>(d), static_cast<int>(m), year);
+		return *this;
+	}
+
+	long long	Date::GetAllDays()		const
+	{
+		return this->days;
+	}
+	int			Date::GetDay()			const
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		return static_cast<int>(d);
+	}
+	int			Date::GetMonth()		const
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		return static_cast<int>(m);
+	}
+	long long	Date::GetYear()			const
+	{
+		long long d = this->days, m, y;
+		ToDate(d, m, y);
+		return y;
+	}
+	int			Date::GetWeekCount()	const
+	{
+		return static_cast<int>(days / 7);
+	}
+	int			Date::GetDayWeek()		const
+	{
+		if (days >= 0)
+			return days % 7 + 1;
+		else
+			return  8 - ((abs(days) - 1) % 7 + 1);
+	}
+
+	Date& Date::MakeOpposite()
+	{
+		days = (days + 1) * -1;
+		return *this;
+	}
+
+	std::string Date::ToString() const
+	{
+		std::string res = "";
+		long long d = days, m, y;
+		if (d < 0)
+			res = '-';
+		ToDate(d, m, y);
+		char pr[] = {
+			static_cast<char>(abs(d)/10) + '0', static_cast<char>(abs(d) % 10) + '0', ':',
+			static_cast<char>(m / 10) + '0', static_cast<char>(m % 10) + '0', ':', '\0'
+		};
+		res += pr + std::to_string(y);
+		return res;
+	}
+
+	std::string Date::ToString(std::string example) const
+	{
+		long long d = days, m, y;
+		ToDate(d, m, y);
+		fillStrDate(d, example, 'D');
+		fillStrDate(m, example, 'M');
+		fillStrDate(y, example, 'Y');
+		return example;
+	}
+
+	#pragma endregion
+
+	#pragma region Операторы
+	
+	Date& Date::operator=(const Date& other)
+	{
+		this->days = other.days;
+		return *this;
+	}
+
+	bool Date::operator==(const Date& other)	const
+	{
+		return this->days == other.days;
+	}
+	bool Date::operator!=(const Date& other)	const
+	{
+		return this->days != other.days;
+	}
+	bool Date::operator<=(const Date& other)	const
+	{
+		return this->days <= other.days;
+	}
+	bool Date::operator>=(const Date& other)	const
+	{
+		return this->days >= other.days;
+	}
+	bool Date::operator<(const Date& other)		const
+	{
+		return this->days < other.days;
+	}
+	bool Date::operator>(const Date& other)		const
+	{
+		return this->days > other.days;
+	}
+
+	Date Date::operator+(const Date& other) const
+	{
+		return Date(this->days + other.days);
+	}
+	Date Date::operator-(const Date& other) const
+	{
+		return Date(this->days - other.days);
+	}
+	Date Date::operator*(long long value)	const
+	{
+		return Date(this->days * value);
+	}
+	Date Date::operator/(long long value)	const
+	{
+		return Date(this->days / value);
+	}
+	Date Date::operator%(long long value)	const
+	{
+		return Date(this->days % value);
+	}
+
+	Date& Date::operator+=(const Date& other)
+	{
+		this->days += other.days;
+		Round();
+		return *this;
+	}
+	Date& Date::operator-=(const Date& other)
+	{
+		this->days -= other.days;
+		Round();
+		return *this;
+	}
+	Date& Date::operator*=(long long value)
+	{
+		this->days *= value;
+		Round();
+		return *this;
+	}
+	Date& Date::operator/=(long long value)
+	{
+		this->days /= value;
+		Round();
+		return *this;
+	}
+	Date& Date::operator%=(long long value)
+	{
+		this->days %= value;
+		Round();
+		return *this;
+	}
+
+	Date&	Date::operator++()
+	{
+		++this->days;
+		Round();
+		return *this;
+	}
+	Date&	Date::operator--()
+	{
+		--this->days;
+		Round();
+		return *this;
+	}
+	Date	Date::operator++(int)
+	{
+		Date res = this->days++;
+		Round();
+		return res;
+	}
+	Date	Date::operator--(int)
+	{
+		Date res = this->days--;
+		Round();
+		return res;
+	}
+
+	#pragma endregion
+
+	Date Date::Now(float UTC)
+	{
+		return Date(static_cast<long long>((
+			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+			+ static_cast<long long>(UTC * 3600000)) / 86400000 
+			+ 719162));
+	}
+	Date Date::MaxDate()
+	{
+		return Date(maxValue);
+	}
+	Date Date::MinDate()
+	{
+		return Date(minValue);
+	}
+
+	void Date::Round()
+	{
+		if (days < minValue)
+			days = days % minValue + maxValue;
+		else if (days > maxValue)
+			days = days % maxValue + minValue;
+	}
+
+	long long Date::ToDay(long long day, long long month, long long year)
+	{
+		int zn = 1;
+		if (day < 0)
+			day = day * (zn = -1) + 1;
+		long long res = day;
+		const unsigned char* arr = Leap(year) ? days_in_months_leap: days_in_months;
+		for (int i = 0; i < month; i++)
+			res += arr[i];
+		res -= arr[month - 1];
+		year--;
+		res += year * 365 + year / 4 - year / 100 + year / 400 - 1;
+		return res * zn;
+	}
+	void Date::ToDate(long long& day, long long& month, long long& year)
+	{
+		month = 0,year = 1;
+		int zn = 1;
+		if (day < 0)
+			day = (zn = -1) * day - 1;
+		year = (day + 1) * 400 / 146097;
+		day -= year * 365 + year / 4 - year / 100 + year / 400 - 1;
+		year++;
+		if (day == 0)
+			day += (Leap(--year)) ? (366) : (365);
+		else if (day == 366 && !Leap(year))
+		{
+			day = 1;
+			year++;
+		}
+
+		int minusMonth = 0;
+		const unsigned char* arr = (Leap(year) ? (days_in_months_leap) : (days_in_months));
+		while (day > minusMonth)
+			minusMonth += arr[month++];
+		minusMonth -= arr[month - 1];
+		day -= minusMonth;
+		day *= zn;
+	}
+	bool Date::IsDatable(long long day, long long month, long long year)
+	{
+		if (day == 0 || month == 0 || year == 0)
+			return false;
+		if (day < 0 || month < 0 || year < 0)
+		{
+			day = abs(day);
+			month = abs(month);
+			year = abs(year);
+		}
+		if(month > 12)
+			return false;
+		if (day > (Leap(year) ? (days_in_months_leap[month - 1]) : (days_in_months[month - 1])))
+			return false;
+		long long d = maxValue, m, g;
+		ToDate(d, m, g);
+		if (year > g)
+			return false;
+		if (year == g && (month > m))
+			return false;
+		if (year == g && month == m && day > d)
+			return false;
+		return true;
+	}
+
+	#pragma endregion
+
+	std::ostream& operator<<(std::ostream& out, const Date& date)
+	{
+		return out << date.ToString();
+	}
+	std::istream& operator>>(std::istream& in, Date& date)
+	{
+		long long arr[3] = {};
+		in >> arr[0];
+		for (char i = 1, pr; i < 3; i++)
+		{
+			in.get(pr);
+			in >> arr[i];
+		}
+		date.Assign(static_cast<int>(arr[0]), static_cast<int>(arr[1]), arr[2]);
+		return in;
+	}
+
+	Date Opposite(Date date)
+	{
+		return date.MakeOpposite();
+	}
+
+	Date operator""_date(const char* date, size_t size)
+	{
+		return Date(date);
+	}
 }
 
-Date Days(int count) {
-	return Date(count);
-}
-}
+/*
+	long long Date::ToDay(int day, int month, int year)
+	{
+		int zn = 1;
+		if (day < 0)
+			day = day * (zn = -1) + 1;
+		long long res = day;
+		const unsigned char* arr = Leap(year) ? days_in_months_leap: days_in_months;
+		for (int i = 0; i < month; i++)
+			res += arr[i];
+		res -= arr[month - 1];
+		year--;
+		res += year * 365;
+		res += year / 4 - year / 100 + year / 400 - 1;
+		if (year > 0)
+			res++;
+		return res * zn;
+	}
+	void Date::ToDate(long long& day, int& month, int& year)
+	{
+		month = 0,year = 1;
+		int zn = 1;
+		if (day < 0)
+			day = (zn = -1) * day - 1;
+		day++;
+		while (day > (Leap(year) ? 366 : 365))
+			day -= (Leap(year++) ? 366 : 365);
+		int minusMonth = 0;
+		const unsigned char* arr = (Leap(year) ? (days_in_months_leap) : (days_in_months));
+		while (day > minusMonth)
+			minusMonth += arr[month++];
+		minusMonth -= arr[month - 1];
+		day -= minusMonth;
+		day *= zn;
+	}
+*/

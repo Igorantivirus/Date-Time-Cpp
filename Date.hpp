@@ -1,100 +1,117 @@
 #pragma once
 
 #include<string>
-#include<chrono>
 #include<iostream>
-namespace dt {
 
-
-bool Leap(int year);
-
-class Date
+namespace dt
 {
-	friend class DateTime;
-	friend std::ostream& operator<<(std::ostream& out, const DateTime& dt);
-	friend std::ostream& operator<<(std::ostream& out, const Date& date);
-	friend std::istream& operator>>(std::istream& in, Date& date);
-public:
-	Date();
-	Date(const char* date);
-	Date(const std::string& date);
-	Date(int days);
-	Date(int day, int month, int year);
-	Date(const Date& date);
+	inline bool Leap(long long year);
 
-	Date& Assign(int day, int month, int year);
-	Date& Assign(const char* date);
-	Date& Assign(const std::string& date);
-	Date& Assign(int days);
-	Date& Assign(const Date& date);
+	class Date
+	{
+		friend std::ostream& operator<<(std::ostream& out, const Date& date);
+		friend std::istream& operator>>(std::istream& in, Date& date);
+		friend class DateTime;
+	public:
 
-	bool IsLeap() const;
-	int AllDays() const;
-	int Days() const;
-	int Months() const;
-	int Years() const;
-	int Weeks() const;
-	int DayWeek() const;
+		#pragma region Конструкторы
 
-	void SetAllDays(int days);
-	void SetDay(int day);
-	void SetMonth(int month);
-	void SetYear(int year);
-	void SetWeeks(int weeks);
+		Date();
+		Date(const char* date);
+		Date(const std::string& date);
+		Date(const char* date, const char* example);
+		Date(const std::string& date, const std::string& example);
+		Date(int day, int month, long long year);
+		Date(long long days);
+		Date(const Date& other);
 
-	void MakeOpposite();
+		#pragma endregion
 
-	Date& operator=(const Date& date);
-	operator std::string();
+		#pragma region Методы
 
-	bool operator<(const Date& date) const;
-	bool operator>(const Date& date) const;
-	bool operator<=(const Date& date) const;
-	bool operator>=(const Date& date) const;
-	bool operator==(const Date& date) const;
-	bool operator!=(const Date& date) const;
+		void Assign(const char* date);
+		void Assign(const std::string& date);
+		void Assign(const char* date, const char* example);
+		void Assign(const std::string& date, const std::string& example);
+		void Assign(int day, int month, long long year);
+		void Assign(long long days);
+		void Assign(const Date& other);
 
-	Date operator+(const Date& date) const;
-	Date operator-(const Date& date) const;
-	Date operator*(int value) const;
-	Date operator/(int value) const;
-	Date operator%(int value) const;
+		bool IsLeap() const;
 
-	Date& operator+=(const Date& date);
-	Date& operator-=(const Date& date);
-	Date& operator*=(int value);
-	Date& operator/=(int value);
-	Date& operator%=(int value);
+		Date& SetAllDays(long long days);
+		Date& SetDay(int day);
+		Date& SetMonth(int month);
+		Date& SetYear(long long year);
+		
+		long long	GetAllDays()	const;
+		int			GetDay()		const;
+		int			GetMonth()		const;
+		long long	GetYear()		const;
+		int			GetWeekCount()	const;
+		int			GetDayWeek()	const;
 
-	Date operator++();
-	Date operator--();
-	Date operator++(int);
-	Date operator--(int);
+		Date& MakeOpposite();
 
-	static Date Now(float TimeZone = 0.f);
-	static Date MaxDate();
-	static Date MinDate();
-private:
-	int _days = 0;
-	static void ToDate(int& d, int& m, int& g);
-	static int ToDay(int d, int m, int g);
-	static bool IsDatable(int d, int m, int g);
-	static const int days_in_month[12];
-	static const int days_in_month_leap[12];
-	static const int sum_month_days[14];
-	static const int sum_month_days_leap[14];
-};
+		std::string ToString()						const;
+		std::string ToString(std::string example)	const;
 
-std::ostream& operator<<(std::ostream& out, const Date& date);
-std::istream& operator>>(std::istream& in, Date& date);
+		#pragma endregion
 
-Date Opposite(const Date& date);
+		#pragma region Операторы
 
-Date operator""_days(unsigned long long days);
-Date operator""_day(unsigned long long days);
-Date operator""_month(unsigned long long months);
-Date operator""_year(unsigned long long years);
-Date operator""_date(const char* date, size_t len);
+		Date& operator=(const Date& other);
 
-Date Days(int count);
+		bool operator==(const Date& other) const;
+		bool operator!=(const Date& other) const;
+		bool operator<=(const Date& other) const;
+		bool operator>=(const Date& other) const;
+		bool operator<(const Date& other) const;
+		bool operator>(const Date& other) const;
+
+		Date operator+(const Date& other) const;
+		Date operator-(const Date& other) const;
+		Date operator*(long long value) const;
+		Date operator/(long long value) const;
+		Date operator%(long long value) const;
+
+		Date& operator+=(const Date& other);
+		Date& operator-=(const Date& other);
+		Date& operator*=(long long value);
+		Date& operator/=(long long value);
+		Date& operator%=(long long value);
+
+		Date& operator++();
+		Date& operator--();
+		Date operator++(int);
+		Date operator--(int);
+
+		#pragma endregion
+
+		static Date Now(float UTC = 0.f);
+		static Date MaxDate();
+		static Date MinDate();
+
+	private:
+		long long days = 0;
+
+		void Round();
+
+		static long long ToDay(long long day, long long month, long long year);
+		static void ToDate(long long& day, long long& month, long long& year);
+		static bool IsDatable(long long day, long long month, long long year);
+
+		static const unsigned char days_in_months[12];
+		static const unsigned char days_in_months_leap[12];
+
+		static const long long maxValue;
+		static const long long minValue;
+	};
+
+	Date Opposite(Date date);
+
+	std::ostream& operator<<(std::ostream& out, const Date& date);
+	std::istream& operator>>(std::istream& in, Date& date);
+
+	Date operator""_date(const char* date, size_t size);
 }

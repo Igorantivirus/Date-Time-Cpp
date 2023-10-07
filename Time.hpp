@@ -1,99 +1,109 @@
 #pragma once
 
-#include<string>
-#include<chrono>
 #include<iostream>
+#include<string>
 
-namespace dt {
-
-
-class Time
+namespace dt
 {
-	friend class DateTime;
-	friend std::ostream& operator<<(std::ostream& out, const DateTime& dt);
-	friend std::ostream& operator<<(std::ostream& out, const Time& time);
-	friend std::istream& operator>>(std::istream& in, Time& time);
-public:
-	Time();
-	Time(int hours, int minuts, int seconds, int milliseconds);
-	Time(int milliseconds);
-	Time(const char* time);
-	Time(const std::string& time);
-	Time(const Time& time);
+	class Time
+	{
+		friend std::ostream& operator<<(std::ostream& out, const Time& time);
+		friend std::istream& operator>>(std::istream& in, Time& time);
+		friend class DateTime;
+	public:
+		#pragma region Конструкторы
 
-	Time& Assign(int hours, int minuts, int seconds, int milliseconds);
-	Time& Assign(const char* time);
-	Time& Assign(const std::string& timeText);
-	Time& Assign(int milliseconds);
-	Time& Assign(const Time& time);
+		Time();
+		Time(int milliseconds);
+		Time(int hours, int minuts, int seconds, int milliseconds);
+		Time(const char* time);
+		Time(const std::string& time);
+		Time(const char* time, const char* example);
+		Time(const std::string& time, const std::string& example);
+		Time(const Time& other);
 
-	int AllMilliseconds() const;
-	int Milliseconds() const;
-	int Seconds() const;
-	int Minutes() const;
-	int Hours() const;
+		#pragma endregion
 
-	void SetAllMillieconds(int milliseconds);
-	void SetMilliseconds(int milliseconds);
-	void SetSeconds(int seconds);
-	void SetMinutes(int minutes);
-	void SetHours(int hours);
+		#pragma region Методы
 
-	void MakeOpposite();
+		void Assign(int milliseconds);
+		void Assign(int hours, int minuts, int seconds, int milliseconds);
+		void Assign(const char* time);
+		void Assign(const std::string& time);
+		void Assign(const char* time, const char* example);
+		void Assign(const std::string& time, const std::string& example);
+		void Assign(const Time& other);
 
-	operator std::string();
-	Time& operator=(const Time& time);
+		int GetAllMilliseconds() const;
+		int GetMilliseconds() const;
+		int GetSeconds() const;
+		int GetMinuts() const;
+		int GetHours() const;
 
-	bool operator<(const Time& time) const;
-	bool operator>(const Time& time) const;
-	bool operator<=(const Time& time) const;
-	bool operator>=(const Time& time) const;
-	bool operator==(const Time& time) const;
-	bool operator!=(const Time& time) const;
+		Time& SetAllMilliseconds(int value);
+		Time& SetMilliseconds(int value);
+		Time& SetSeconds(int value);
+		Time& SetMinuts(int value);
+		Time& SetHours(int value);
 
-	Time operator+(const Time& time) const;
-	Time operator-(const Time& time) const;
-	Time operator*(float value) const;
-	Time operator/(float value) const;
-	Time operator%(int value) const;
+		Time MakeOpposite();
 
-	Time& operator+=(const Time& time);
-	Time& operator-=(const Time& time);
-	Time& operator*=(float value);
-	Time& operator/=(float value);
-	Time& operator%=(int value);
+		std::string ToString() const;
+		std::string ToString(std::string example) const;
 
-	Time& operator++();
-	Time& operator--();
-	Time operator++(int);
-	Time operator--(int);
+		#pragma endregion
 
-	static Time Now(float TimeZone = 0.f);
-	static Time MaxTime();
-	static Time MinTime();
-private:
-	int _milliseconds = 0;
-	void Round();
-	static void ToTime(int& hours, int& minuts, int& seconds, int& milliseconds);
-	static bool IsTimeable(int hours, int minuts, int seconds, int milliseconds);
-};
+		#pragma region Операторы
 
-std::ostream& operator<<(std::ostream& out, const Time& time);
-std::istream& operator>>(std::istream& in, Time& time);
+		Time& operator=(const Time& other);
 
-Time Opposite(const Time& time);
+		bool operator==(const Time& other) const;
+		bool operator!=(const Time& other) const;
+		bool operator<(const Time& other) const;
+		bool operator>(const Time& other) const;
+		bool operator<=(const Time& other) const;
+		bool operator>=(const Time& other) const;
 
-void Sleep(long long milliseconds);
-void Sleep(const Time& time);
+		Time operator+(const Time& other) const;
+		Time operator-(const Time& other) const;
+		Time operator*(int value) const;
+		Time operator/(int value) const;
+		Time operator%(int value) const;
 
-Time Milliseconds(int count);
-Time Seconds(int count);
-Time Minutes(int count);
-Time Hours(int count);
+		Time operator+=(const Time& other);
+		Time operator-=(const Time& other);
+		Time operator*=(int value);
+		Time operator/=(int value);
+		Time operator%=(int value);
 
-Time operator""_milliseconds(unsigned long long value);
-Time operator""_seconds(unsigned long long value);
-Time operator""_minutes(unsigned long long value);
-Time operator""_hours(unsigned long long value);
-Time operator""_time(const char* time, size_t len);
+		#pragma endregion
+
+		static Time Now(float UTC = 0);
+		static Time MaxTime();
+		static Time MinTime();
+
+	private:
+		int milliseconds = 0;
+		void Round();
+
+		static int ToMilliseconds(int hours, int minuts, int seconds, int milliseconds);
+		static void ToTime(int& hours, int& minuts, int& seconds, int& milliseconds);
+		static bool IsTimeabe(int hours, int minuts, int seconds, int milliseconds);
+		static const int maxValue;
+	};
+
+	Time Opposite(Time value);
+
+	void Sleep(const Time& time);
+	void Sleep(int milliseconds);
+
+	std::ostream& operator<<(std::ostream& out, const Time& time);
+	std::istream& operator>>(std::istream& in, Time& time);
+
+	Time operator""_time(const char* time, size_t size);
+
+	Time hours(int value);
+	Time minuts(int value);
+	Time seconds(int value);
+	Time milliseconds(int value);
 }
