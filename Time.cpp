@@ -393,7 +393,7 @@ namespace dt
 	}
 	Time minuts(int value)
 	{
-		Time(0, value, 0, 0);
+		return Time(0, value, 0, 0);
 	}
 	Time seconds(int value)
 	{

@@ -79,7 +79,7 @@ namespace dt
 	DateTime::DateTime(const Date& date, const Time& time) : days(date.days), milliseconds(time.milliseconds) {}
 	DateTime::DateTime(const Date& date) : days(date.days), milliseconds(0) {}
 	DateTime::DateTime(const Time& time) : days(0), milliseconds(time.milliseconds) {}
-	DateTime::DateTime(const DateTime& other) : days(other.milliseconds), milliseconds(other.milliseconds) {}
+	DateTime::DateTime(const DateTime& other) : days(other.days), milliseconds(other.milliseconds) {}
 
 	#pragma endregion
 
