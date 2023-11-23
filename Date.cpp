@@ -1,9 +1,8 @@
 #include "Date.hpp"
 
 #include<chrono>
-#include<limits>
 
-void fillFromStrDate(const char* date, long long arr[3])
+static void fillFromStrDate(const char* date, long long arr[3])
 {
 	if (date == nullptr) {
 		return;
@@ -20,9 +19,9 @@ void fillFromStrDate(const char* date, long long arr[3])
 		date++;
 	}
 }
-void fillStrDate(const long long num, std::string& res, const char c)
+static void fillStrDate(const long long num, std::string& res, const char c)
 {
-	size_t pos;
+	size_t pos = 0;
 	const char pr[3] = { '%', c, '\0' };
 	if ((pos = res.find(pr)) == std::string::npos)
 		return;
@@ -40,22 +39,23 @@ void fillStrDate(const long long num, std::string& res, const char c)
 
 namespace dt
 {
-	const unsigned char Date::days_in_months[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
-	const unsigned char Date::days_in_months_leap[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
-
-	const long long Date::maxValue = LLONG_MAX / 400 - 1;
-	const long long Date::minValue = LLONG_MIN / 400;
-
-	inline bool Leap(long long year)
+	inline constexpr bool Leap(long long year)
 	{
 		return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+	}
+
+	unsigned CountDaysInMonth(const unsigned char month, const bool leap)
+	{
+		if (month == 0 || month > 12)
+			return 0U;
+		return leap ? Date::days_in_months_leap[month - 1] : Date::days_in_months[month - 1];
 	}
 
 	#pragma region class Date
 
 	#pragma region Конструкторы
 
-	Date::Date() : days(0) {}
+	Date::Date() : days(0), day(1), month(1), year(1) {}
 	Date::Date(const char* date)
 	{
 		Assign(date);
@@ -70,17 +70,17 @@ namespace dt
 	}
 	Date::Date(const std::string& date, const std::string& example)
 	{
-		Assign(date, example);
+		Assign(date.c_str(), example.c_str());
 	}
 	Date::Date(int day, int month, long long year)
 	{
 		Assign(day, month, year);
 	}
-	Date::Date(long long days) : days(days)
+	Date::Date(long long days)
 	{
-		Round();
+		Assign(days);
 	}
-	Date::Date(const Date& other) : days(other.days) {}
+	Date::Date(const Date& other) : days(other.days), day(other.day), month(other.month), year(other.year) {}
 
 	#pragma endregion
 
@@ -121,6 +121,9 @@ namespace dt
 	{
 		if (!IsDatable(day, month, year))
 			return;
+		this->day = day;
+		this->month = month;
+		this->year = year;
 		this->days = ToDay(day, month, year);
 	}
 	void Date::Assign(long long days)
@@ -130,105 +133,94 @@ namespace dt
 	}
 	void Date::Assign(const Date& other)
 	{
-		this->days = other.days;
+		days = other.days;
+		day = other.day;
+		month = other.month;
+		year = other.year;
 	}
 
-	bool Date::IsLeap() const
+	constexpr bool Date::IsLeap() const
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		return Leap(y);
+		return Leap(year);
 	}
 
 	Date& Date::SetAllDays(long long days)
 	{
-		this->days = days;
+		Assign(days);
 		return* this;
 	}
 	Date& Date::SetDay(int day)
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		Assign(static_cast<int>(day), static_cast<int>(m), y);
+		Assign(day, static_cast<int>(month), year);
 		return *this;
 	}
 	Date& Date::SetMonth(int month)
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		Assign(static_cast<int>(d), static_cast<int>(month), y);
+		Assign(static_cast<int>(day), month, year);
 		return *this;
 	}
 	Date& Date::SetYear(long long year)
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		Assign(static_cast<int>(d), static_cast<int>(m), year);
+		Assign(static_cast<int>(day), static_cast<int>(month), year);
 		return *this;
 	}
 
-	long long	Date::GetAllDays()		const
+	long long	Date::GetAllDays()			const
 	{
 		return this->days;
 	}
-	int			Date::GetDay()			const
+	int			Date::GetDay()				const
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		return static_cast<int>(d);
+		return static_cast<int>(day);
 	}
-	int			Date::GetMonth()		const
+	int			Date::GetMonth()			const
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		return static_cast<int>(m);
+		return static_cast<int>(month);
 	}
-	long long	Date::GetYear()			const
+	long long	Date::GetYear()				const
 	{
-		long long d = this->days, m, y;
-		ToDate(d, m, y);
-		return y;
+		return year;
 	}
-	int			Date::GetWeekCount()	const
+	int			Date::GetWeekCount()		const
 	{
 		return static_cast<int>(days / 7);
 	}
-	int			Date::GetDayWeek()		const
+	int			Date::GetDayWeek()			const
 	{
 		if (days >= 0)
 			return days % 7 + 1;
 		else
 			return  8 - ((abs(days) - 1) % 7 + 1);
 	}
+	unsigned	Date::GetCountDaysInMonth() const
+	{
+		return IsLeap() ? days_in_months_leap[month - 1] : days_in_months[month - 1];
+	}
 
 	Date& Date::MakeOpposite()
 	{
 		days = (days + 1) * -1;
+		day *= -1;
 		return *this;
 	}
 
 	std::string Date::ToString() const
 	{
 		std::string res = "";
-		long long d = days, m, y;
-		if (d < 0)
+		int prDay = std::abs(static_cast<int>(day));
+		if (day < 0)
 			res = '-';
-		ToDate(d, m, y);
-		char pr[] = {
-			static_cast<char>(abs(d)/10) + '0', static_cast<char>(abs(d) % 10) + '0', ':',
-			static_cast<char>(m / 10) + '0', static_cast<char>(m % 10) + '0', ':', '\0'
+		char pr[] = { static_cast<char>(prDay / 10) + '0', static_cast<char>(prDay % 10) + '0', ':',
+			static_cast<char>(month / 10) + '0', static_cast<char>(month % 10) + '0', ':', '\0'
 		};
-		res += pr + std::to_string(y);
-		return res;
+		return res += pr + std::to_string(year);
 	}
 
 	std::string Date::ToString(std::string example) const
 	{
-		long long d = days, m, y;
-		ToDate(d, m, y);
-		fillStrDate(d, example, 'D');
-		fillStrDate(m, example, 'M');
-		fillStrDate(y, example, 'Y');
+		fillStrDate(day, example, 'D');
+		fillStrDate(month, example, 'M');
+		fillStrDate(year, example, 'Y');
 		return example;
 	}
 
@@ -238,7 +230,10 @@ namespace dt
 	
 	Date& Date::operator=(const Date& other)
 	{
-		this->days = other.days;
+		days = other.days;
+		day = other.day;
+		month = other.month;
+		year = other.year;
 		return *this;
 	}
 
@@ -290,68 +285,69 @@ namespace dt
 
 	Date& Date::operator+=(const Date& other)
 	{
-		this->days += other.days;
-		Round();
+		Assign(days + other.days);
 		return *this;
 	}
 	Date& Date::operator-=(const Date& other)
 	{
-		this->days -= other.days;
-		Round();
+		Assign(days - other.days);
 		return *this;
 	}
 	Date& Date::operator*=(long long value)
 	{
-		this->days *= value;
-		Round();
+		Assign(days * value);
 		return *this;
 	}
 	Date& Date::operator/=(long long value)
 	{
-		this->days /= value;
-		Round();
+		Assign(days / value);
 		return *this;
 	}
 	Date& Date::operator%=(long long value)
 	{
-		this->days %= value;
-		Round();
+		Assign(days % value);
 		return *this;
 	}
 
 	Date&	Date::operator++()
 	{
-		++this->days;
-		Round();
+		Assign(days + 1);
 		return *this;
 	}
 	Date&	Date::operator--()
 	{
-		--this->days;
-		Round();
+		Assign(days - 1);
 		return *this;
 	}
 	Date	Date::operator++(int)
 	{
-		Date res = this->days++;
-		Round();
+		Date res;
+		res.days = days;
+		res.day = day;
+		res.month = month;
+		res.year = year;
+		Assign(days + 1);
 		return res;
 	}
 	Date	Date::operator--(int)
 	{
-		Date res = this->days--;
-		Round();
+		Date res;
+		res.days = days;
+		res.day = day;
+		res.month = month;
+		res.year = year;
+		Assign(days - 1);
 		return res;
 	}
 
 	#pragma endregion
 
-	Date Date::Now(float UTC)
+	Date Date::Now()
 	{
-		return Date(static_cast<long long>((
-			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
-			+ static_cast<long long>(UTC * 3600000)) / 86400000 
-			+ 719162));
+		time_t now = time(nullptr);
+		tm date;
+		localtime_s(&date, &now);
+		return Date(date.tm_mday, date.tm_mon+1, date.tm_year+1900);
 	}
 	Date Date::MaxDate()
 	{
@@ -368,6 +364,8 @@ namespace dt
 			days = days % minValue + maxValue;
 		else if (days > maxValue)
 			days = days % maxValue + minValue;
+		day = days;
+		ToDate(day, month, year);
 	}
 
 	long long Date::ToDay(long long day, long long month, long long year)
@@ -400,7 +398,6 @@ namespace dt
 			day = 1;
 			year++;
 		}
-
 		int minusMonth = 0;
 		const unsigned char* arr = (Leap(year) ? (days_in_months_leap) : (days_in_months));
 		while (day > minusMonth)
@@ -458,7 +455,7 @@ namespace dt
 		return date.MakeOpposite();
 	}
 
-	Date operator""_date(const char* date, size_t size)
+	const Date operator""_date(const char* date, const size_t size)
 	{
 		return Date(date);
 	}

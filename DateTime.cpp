@@ -2,8 +2,6 @@
 
 #include<chrono>
 
-//#define maxValue 86400000
-
 char fillFromStrDT(const char* dt, long long arr[7])
 {
 	if (dt == nullptr) {
@@ -43,10 +41,10 @@ namespace dt
 {
 	#pragma region Конструкторы
 
-	DateTime::DateTime() : days(0), milliseconds(0) {}
-	DateTime::DateTime(long long days, int milliseconds) : days(days), milliseconds(milliseconds)
+	DateTime::DateTime() {}
+	DateTime::DateTime(long long days, int milliseconds)
 	{
-		Round();
+		Assign(days, milliseconds);
 	}
 	DateTime::DateTime(const char* dt)
 	{
@@ -76,10 +74,22 @@ namespace dt
 	{
 		Assign(hours, minuts, seconds, milliseconds);
 	}
-	DateTime::DateTime(const Date& date, const Time& time) : days(date.days), milliseconds(time.milliseconds) {}
-	DateTime::DateTime(const Date& date) : days(date.days), milliseconds(0) {}
-	DateTime::DateTime(const Time& time) : days(0), milliseconds(time.milliseconds) {}
-	DateTime::DateTime(const DateTime& other) : days(other.days), milliseconds(other.milliseconds) {}
+	DateTime::DateTime(const Date& date, const Time& time)
+	{
+		Assign(date, time);
+	}
+	DateTime::DateTime(const Date& date)
+	{
+		Assign(date);
+	}
+	DateTime::DateTime(const Time& time)
+	{
+		Assign(time);
+	}
+	DateTime::DateTime(const DateTime& other)
+	{
+		Assign(other.date, other.time);
+	}
 
 	#pragma endregion
 
@@ -87,8 +97,8 @@ namespace dt
 
 	void DateTime::Assign(long long days, int milliseconds)
 	{
-		this->days = days;
-		this->milliseconds = milliseconds;
+		date.days = days;
+		time.milliseconds = milliseconds;
 		Round();
 	}
 	void DateTime::Assign(const char* dt)
@@ -142,221 +152,205 @@ namespace dt
 	{
 		if (!Date::IsDatable(days, months, years) || !Time::IsTimeabe(hours, minuts, seconds, milliseconds))
 			return;
-		this->days = Date::ToDay(days, months, years);
-		this->milliseconds = Time::ToMilliseconds(hours, minuts, seconds, milliseconds);
-		Round();
+		date.day = days;
+		date.month = months;
+		date.year = years;
+		date.days = Date::ToDay(days, months, years);
+		time.milliseconds = Time::ToMilliseconds(hours, minuts, seconds, milliseconds);
 	}
 	void DateTime::Assign(int days, int months, long long years)
 	{
 		if (!Date::IsDatable(days, months, years))
 			return;
-		this->days = Date::ToDay(days, months, years);
-		Round();
+		date.day = days;
+		date.month = months;
+		date.year = years;
+		date.days = Date::ToDay(days, months, years);
 	}
 	void DateTime::Assign(int hours, int minuts, int seconds, int milliseconds)
 	{
 		if (!Time::IsTimeabe(hours, minuts, seconds, milliseconds))
 			return;
-		this->milliseconds = Time::ToMilliseconds(hours, minuts, seconds, milliseconds);
-		Round();
+		time.milliseconds = Time::ToMilliseconds(hours, minuts, seconds, milliseconds);
 	}
 	void DateTime::Assign(const Date& date, const Time& time)
 	{
-		days = date.days;
-		milliseconds = time.milliseconds;
+		this->date.days = date.days;
+		this->date.day = date.day;
+		this->date.month = date.month;
+		this->date.year = date.year;
+		this->time.milliseconds = time.milliseconds;
 	}
 	void DateTime::Assign(const Date& date)
 	{
-		days = date.days;
+		this->date.days = date.days;
+		this->date.day = date.day;
+		this->date.month = date.month;
+		this->date.year = date.year;
 	}
 	void DateTime::Assign(const Time& time)
 	{
-		milliseconds = time.milliseconds;
+		this->time.milliseconds = time.milliseconds;
 	}
 	void DateTime::Assign(const DateTime& other)
 	{
-		days = other.days;
-		milliseconds = other.milliseconds;
+		this->date.days = other.date.days;
+		this->date.day = other.date.day;
+		this->date.month = other.date.month;
+		this->date.year = other.date.year;
+		this->time.milliseconds = other.time.milliseconds;
 	}
 
 	bool DateTime::IsLeap() const
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		return Leap(y);
+		return date.IsLeap();
 	}
 
 	DateTime& DateTime::SetAllDays(long long days)	
 	{
-		this->days = days;
+		Assign(days, time.milliseconds);
 		return*this;
 	}
 	DateTime& DateTime::SetDay(int day)
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		Assign(static_cast<int>(day), static_cast<int>(m), y);
+		Assign(static_cast<int>(day), static_cast<int>(date.month), date.year);
 		return *this;
 	}
 	DateTime& DateTime::SetMonth(int month)
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		Assign(static_cast<int>(d), static_cast<int>(month), y);
+		Assign(static_cast<int>(date.day), static_cast<int>(month), date.year);
 		return *this;
 	}
 	DateTime& DateTime::SetYear(long long year)
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		Assign(static_cast<int>(d), static_cast<int>(m), year);
+		Assign(static_cast<int>(date.day), static_cast<int>(date.month), year);
 		return *this;
 	}
 	DateTime& DateTime::SetDate(const Date& date)
 	{
-		days = date.days;
+		Assign(date);
 		return *this;
 	}
 	DateTime& DateTime::SetAllMilliseconds(int value)
 	{
-		milliseconds = value;
-		Round();
+		Assign(date.days, value);
 		return *this;
 	}
 	DateTime& DateTime::SetMilliseconds(int value)
 	{
-		if (value >= 1000 || value < 0)
-			return *this;
-		milliseconds = milliseconds / 1000 * 1000 + value;
-		Round();
+		time.SetMilliseconds(value);
 		return *this;
 	}
 	DateTime& DateTime::SetSeconds(int value)
 	{
-		if (value >= 60 || value < 0)
-			return *this;
-		milliseconds = milliseconds / 60000 * 60000 + value * 1000 + milliseconds % 1000;
-		Round();
+		time.SetSeconds(value);
 		return *this;
 	}
 	DateTime& DateTime::SetMinuts(int value)
 	{
-		if (value >= 60 || value < 0)
-			return *this;
-		milliseconds = milliseconds / 3600000 * 3600000 + value * 60000 + milliseconds % 60000;
-		Round();
+		time.SetMinuts(value);
 		return *this;
 	}
 	DateTime& DateTime::SetHours(int value)
 	{
-		if (value >= 24 || value < 0)
-			return *this;
-		milliseconds = milliseconds % 3600000 + value * 3600000;
-		Round();
+		time.SetHours(value);
 		return *this;
 	}
 	DateTime& DateTime::SetTime(const Time& time)
 	{
-		milliseconds = time.milliseconds;
+		Assign(time);
 		return *this;
 	}
 
 	long long	DateTime::GetAllDays()			const
 	{
-		return this->days;
+		return date.GetAllDays();
 	}
 	int			DateTime::GetDay()				const
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		return static_cast<int>(d);
+		return date.GetDay();
 	}
 	int			DateTime::GetMonth()			const
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		return static_cast<int>(m);
+		return date.GetMonth();
 	}
 	long long	DateTime::GetYear()				const
 	{
-		long long d = this->days, m, y;
-		Date::ToDate(d, m, y);
-		return y;
+		return date.GetYear();
 	}
 	int			DateTime::GetWeekCount()		const
 	{
-		return static_cast<int>(days / 7);
+		return date.GetWeekCount();
 	}
 	int			DateTime::GetDayWeek()			const
 	{
-		if (days >= 0)
-			return days % 7 + 1;
-		else
-			return  8 - ((abs(days) - 1) % 7 + 1);
-	}
-	int			DateTime::GetAllMilliseconds()	const
-	{
-		return milliseconds;
+		return date.GetDayWeek();
 	}
 	Date		DateTime::GetDate()				const
 	{
-		return Date(days);
+		return date;
+	}
+	int			DateTime::GetAllMilliseconds()	const
+	{
+		return time.GetAllMilliseconds();
 	}
 	int			DateTime::GetMilliseconds()		const
 	{
-		return milliseconds % 1000;
+		return time.GetMilliseconds();
 	}
 	int			DateTime::GetSeconds()			const
 	{
-		return milliseconds / 1000 % 60;
+		return time.GetSeconds();
 	}
 	int			DateTime::GetMinuts()			const
 	{
-		return milliseconds / 60000 % 60;
+		return time.GetMinuts();
 	}
 	int			DateTime::GetHours()			const
 	{
-		return milliseconds / 3600000;
+		return time.GetHours();
 	}
 	Time		DateTime::GetTime()				const
 	{
-		return Time(milliseconds);
+		return time;
+	}
+	unsigned	DateTime::GetCountDaysInMonth()	const
+	{
+		return date.GetCountDaysInMonth();
 	}
 
 	DateTime& DateTime::MakeOpposite()
 	{
-		days = (days + 1) * -1;
-		milliseconds = Time::maxValue - milliseconds;
+		date.MakeOpposite();
+		time.MakeOpposite();
 		return *this;
 	}
 	DateTime& DateTime::MakeOppositeTime()
 	{
-		milliseconds = Time::maxValue - milliseconds;
+		time.MakeOpposite();
 		return *this;
 	}
 	DateTime& DateTime::MakeOppositeDate()
 	{
-		days = (days + 1) * -1;
+		date.MakeOpposite();
 		return *this;
 	}
 
 	std::string DateTime::ToString() const
 	{
-		return Date(days).ToString() + '-' + Time(milliseconds).ToString();
+		return date.ToString() + '-' + time.ToString();
 	}
 	std::string DateTime::ToString(std::string example) const
 	{
-		long long d = days, m, y;
-		Date::ToDate(d, m, y);
-		int ho, mi, se, mil = milliseconds;
-		Time::ToTime(ho, mi, se, mil);
-		fillStrDT(d, example, 'D');
-		fillStrDT(m, example, 'M');
-		fillStrDT(y, example, 'Y');
-		fillStrDT(ho, example, 'h');
-		fillStrDT(mi, example, 'm');
-		fillStrDT(se, example, 's');
-		fillStrDT(mil, example, 'S');
+		int hour, minut, second, millisecond = time.milliseconds;
+		Time::ToTime(hour, minut, second, millisecond);
+		fillStrDT(date.day, example, 'D');
+		fillStrDT(date.month, example, 'M');
+		fillStrDT(date.year, example, 'Y');
+		fillStrDT(hour, example, 'h');
+		fillStrDT(minut, example, 'm');
+		fillStrDT(second, example, 's');
+		fillStrDT(millisecond, example, 'S');
 		return example;
 	}
 
@@ -365,41 +359,43 @@ namespace dt
 	#pragma region Операторы
 	
 	DateTime::operator Time() const {
-		return Time(milliseconds);
+		return time;
 	}
 	DateTime::operator Date() const {
-		return Date(days);
+		return date;
 	}
 
 	bool DateTime::operator<(const DateTime& dt) const {
-		if (days < dt.days)
+		if (date.days < dt.date.days)
 			return true;
-		if (days == dt.days) {
-			if (days < 0)
-				return milliseconds > dt.milliseconds;
-			else 
-				return milliseconds < dt.milliseconds;
+		if (date.days == dt.date.days)
+		{
+			if (date.days < 0)
+				return time.milliseconds > dt.time.milliseconds;
+			else
+				return time.milliseconds < dt.time.milliseconds;
 		}
 		else
 			return false;
 	}
 	bool DateTime::operator>(const DateTime& dt) const {
-		if (days > dt.days)
+		if (date.days > dt.date.days)
 			return true;
-		if (days == dt.days) {
-			if (days < 0)
-				return milliseconds < dt.milliseconds;
+		if (date.days == dt.date.days)
+		{
+			if (date.days < 0)
+				return time.milliseconds < dt.time.milliseconds;
 			else
-				return milliseconds > dt.milliseconds;
+				return time.milliseconds > dt.time.milliseconds;
 		}
 		else
 			return false;
 	}
 	bool DateTime::operator==(const DateTime& dt) const {
-		return days == dt.days && milliseconds == dt.milliseconds;
+		return date.days == dt.date.days && time.milliseconds == dt.time.milliseconds;
 	}
 	bool DateTime::operator!=(const DateTime& dt) const {
-		return !(days == dt.days && milliseconds == dt.milliseconds);
+		return !(date.days == dt.date.days && time.milliseconds == dt.time.milliseconds);
 	}
 	bool DateTime::operator<=(const DateTime& dt) const {
 		return !(*this > dt);
@@ -409,39 +405,62 @@ namespace dt
 	}
 
 	DateTime DateTime::operator+(const DateTime& dt) const {
-		return DateTime(days + dt.days, milliseconds + ((days >= 0) ? (dt.milliseconds) : (-dt.milliseconds)));
+		return DateTime(
+			date.days + dt.date.days, 
+			time.milliseconds + ((date.days >= 0) ? (dt.time.milliseconds) : (-dt.time.milliseconds))
+		);
 	}
 	DateTime DateTime::operator-(const DateTime& dt) const {
-		return DateTime(days - dt.days, milliseconds - ((days >= 0) ? (dt.milliseconds) : (-dt.milliseconds)));
+		return DateTime(
+			date.days - dt.date.days,
+			time.milliseconds - ((date.days >= 0) ? (dt.time.milliseconds) : (-dt.time.milliseconds))
+		);
 	}
 	DateTime DateTime::operator*(long long value) const {
-		return DateTime(static_cast<int>(days * value), static_cast<int>(milliseconds * ((days >= 0) ? (value) : (-value))));
+		return DateTime(
+			date.days * value,
+			static_cast<int>(time.milliseconds * value)
+		);
 	}
 	DateTime DateTime::operator/(long long value) const {
-		return DateTime(static_cast<int>(days / value), static_cast<int>(milliseconds / ((days >= 0) ? (value) : (-value))));
+		return DateTime(
+			date.days / value,
+			static_cast<int>(time.milliseconds / value)
+		);
 	}
 
 	DateTime& DateTime::operator+=(const DateTime& dt) {
-		Assign(days + dt.days, milliseconds + ((days >= 0) ? (dt.milliseconds) : (-dt.milliseconds)));
+		Assign(
+			date.days + dt.date.days, 
+			time.milliseconds + ((date.days >= 0) ? (dt.time.milliseconds) : (-dt.time.milliseconds))
+		);
 		return *this;
 	}
 	DateTime& DateTime::operator-=(const DateTime& dt) {
-		Assign(days - dt.days, milliseconds - ((days >= 0) ? (dt.milliseconds) : (-dt.milliseconds)));
+		Assign(
+			date.days - dt.date.days,
+			time.milliseconds - ((date.days >= 0) ? (dt.time.milliseconds) : (-dt.time.milliseconds))
+		);
 		return *this;
 	}
 	DateTime& DateTime::operator*=(long long value) {
-		Assign(static_cast<int>(days * value), static_cast<int>(milliseconds * ((days >= 0) ? (value) : (-value))));
+		Assign(
+			date.days * value, static_cast<int>(time.milliseconds * value)
+		);
 		return *this;
 	}
 	DateTime& DateTime::operator/=(long long value) {
-		Assign(static_cast<int>(days / value), static_cast<int>(milliseconds / ((days >= 0) ? (value) : (-value))));
+		Assign(
+			date.days / value, static_cast<int>(time.milliseconds / value)
+		);
 		return *this;
 	}
 
 	#pragma endregion
 
-	DateTime DateTime::Now(float TimeZone) {
-		long long milliseconds = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + static_cast<long long>(TimeZone * 3600000));
+	DateTime DateTime::Now() {
+		long long milliseconds = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
+			static_cast<long long>(Time::UTC() * 3600000));
 		return DateTime(static_cast<int>(milliseconds / 86400000 + 719162), static_cast<int>(milliseconds % 86400000));
 	}
 	DateTime DateTime::MaxDateTime() {
@@ -453,27 +472,29 @@ namespace dt
 
 	void DateTime::Round()
 	{
-		long long plus = (days >= 0) ? 1 : -1;
-		while (milliseconds >= Time::maxValue)
+		long long plus = (date.days >= 0) ? 1 : -1;
+		while (time.milliseconds >= Time::maxValue)
 		{
-			milliseconds -= Time::maxValue;
-			days+= plus;
+			time.milliseconds -= Time::maxValue;
+			date.days += plus;
 		}
-		while (milliseconds < 0)
+		while (time.milliseconds < 0)
 		{
-			milliseconds += Time::maxValue;
-			days-= plus;
+			time.milliseconds += Time::maxValue;
+			date.days -= plus;
 		}
-		if (days < Date::minValue)
+		if (date.days < Date::minValue)
 		{
-			days = days % Date::minValue + Date::maxValue + 1;
-			milliseconds = Time::maxValue - milliseconds;
+			date.days = date.days % Date::minValue + Date::maxValue + 1;
+			time.milliseconds = Time::maxValue - time.milliseconds;
 		}
-		else if (days > Date::maxValue)
+		else if (date.days > Date::maxValue)
 		{
-			days = days % Date::maxValue + Date::minValue - 1;
-			milliseconds = Time::maxValue - milliseconds;
+			date.days = date.days % Date::maxValue + Date::minValue - 1;
+			time.milliseconds = Time::maxValue - time.milliseconds;
 		}
+		date.day = date.days;
+		Date::ToDate(date.day, date.month, date.year);
 	}
 
 	std::ostream& operator<<(std::ostream& out, const DateTime& dt)
@@ -485,9 +506,9 @@ namespace dt
 		Date prd;
 		Time prt;
 		in >> prd;
-		char pr;
-		in.get(pr);
+		in.get();
 		in >> prt;
+		dt.Assign(prd, prt);
 		return in;
 	}
 

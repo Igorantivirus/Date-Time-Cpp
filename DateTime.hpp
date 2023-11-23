@@ -6,9 +6,6 @@
 #include"Date.hpp"
 #include"Time.hpp"
 
-#pragma region
-#pragma endregion
-
 namespace dt
 {
 	class DateTime
@@ -16,6 +13,7 @@ namespace dt
 		friend std::ostream& operator<<(std::ostream& out, const DateTime& dt);
 		friend std::istream& operator>>(std::istream& in, DateTime& dt);
 	public:
+
 		#pragma region Конструкторы
 
 		DateTime();
@@ -76,6 +74,7 @@ namespace dt
 		int			GetMinuts()				const;
 		int			GetHours()				const;
 		Time		GetTime()				const;
+		unsigned	GetCountDaysInMonth()	const;
 
 		DateTime& MakeOpposite();
 		DateTime& MakeOppositeTime();
@@ -112,13 +111,13 @@ namespace dt
 
 		#pragma endregion
 
-		static DateTime Now(float UTC = 0);
+		static DateTime Now();
 		static DateTime MaxDateTime();
 		static DateTime MinDateTime();
 
 	private:
-		long long days = 0;
-		int milliseconds = 0;
+		Date date;
+		Time time;
 
 		void Round();
 	};

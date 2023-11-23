@@ -42,8 +42,6 @@ namespace dt
 {
 	#pragma region class Time
 
-	const int Time::maxValue = 86400000;
-
 	#pragma region Конструкторы
 
 	Time::Time() : milliseconds(0) {}
@@ -158,7 +156,7 @@ namespace dt
 	{
 		if (value >= 1000 || value < 0)
 			return *this;
-		milliseconds = milliseconds / 1000 * 1000 + value;
+		milliseconds = milliseconds - milliseconds % 1000 + value;
 		Round();
 		return *this;
 	}
@@ -166,7 +164,7 @@ namespace dt
 	{
 		if (value >= 60 || value < 0)
 			return *this;
-		milliseconds = milliseconds / 60000 * 60000 + value * 1000 + milliseconds % 1000;
+		milliseconds = milliseconds - milliseconds % 60000 + value * 1000 + milliseconds % 1000;
 		Round();
 		return *this;
 	}
@@ -174,7 +172,7 @@ namespace dt
 	{
 		if (value >= 60 || value < 0)
 			return *this;
-		milliseconds = milliseconds / 3600000 * 3600000 + value * 60000 + milliseconds % 60000;
+		milliseconds = milliseconds - milliseconds % 3600000 + value * 60000 + milliseconds % 60000;
 		Round();
 		return *this;
 	}
@@ -306,11 +304,11 @@ namespace dt
 
 	#pragma endregion
 
-	Time Time::Now(float UTC)
+	Time Time::Now()
 	{
 		return Time(
 			(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
-				static_cast<long long>(UTC * 3600000)) % 86400000
+				static_cast<long long>(UTC() * 3600000)) % 86400000
 		);
 	}
 	Time Time::MaxTime()
@@ -321,12 +319,22 @@ namespace dt
 	{
 		return Time(0);
 	}
+	float Time::UTC()
+	{
+		time_t now = time(nullptr);
+		tm localTime1, localTime2;
+		localtime_s(&localTime1, &now);
+		gmtime_s(&localTime2, &now);
+		return
+			((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
+				(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
+	}
 
 	void Time::Round()
 	{
 		while (milliseconds < 0)
 			milliseconds += maxValue;
-		milliseconds %= 86400000;
+		milliseconds %= maxValue;
 	}
 
 	int Time::ToMilliseconds(int hours, int minuts, int seconds, int milliseconds)

@@ -2,15 +2,17 @@
 
 #include<string>
 #include<iostream>
+#include<limits>
 
 namespace dt
 {
-	inline bool Leap(long long year);
+	inline constexpr bool Leap(long long year);
 
 	class Date
 	{
 		friend std::ostream& operator<<(std::ostream& out, const Date& date);
 		friend std::istream& operator>>(std::istream& in, Date& date);
+		friend unsigned CountDaysInMonth(const unsigned char month, const bool leap);
 		friend class DateTime;
 	public:
 
@@ -22,8 +24,8 @@ namespace dt
 		Date(const char* date, const char* example);
 		Date(const std::string& date, const std::string& example);
 		Date(int day, int month, long long year);
-		Date(long long days);
 		Date(const Date& other);
+		explicit	Date(long long days);
 
 		#pragma endregion
 
@@ -37,19 +39,20 @@ namespace dt
 		void Assign(long long days);
 		void Assign(const Date& other);
 
-		bool IsLeap() const;
+		constexpr bool IsLeap() const;
 
 		Date& SetAllDays(long long days);
 		Date& SetDay(int day);
 		Date& SetMonth(int month);
 		Date& SetYear(long long year);
 		
-		long long	GetAllDays()	const;
-		int			GetDay()		const;
-		int			GetMonth()		const;
-		long long	GetYear()		const;
-		int			GetWeekCount()	const;
-		int			GetDayWeek()	const;
+		long long	GetAllDays()			const;
+		int			GetDay()				const;
+		int			GetMonth()				const;
+		long long	GetYear()				const;
+		int			GetWeekCount()			const;
+		int			GetDayWeek()			const;
+		unsigned	GetCountDaysInMonth()	const;
 
 		Date& MakeOpposite();
 
@@ -88,12 +91,15 @@ namespace dt
 
 		#pragma endregion
 
-		static Date Now(float UTC = 0.f);
+		static Date Now();
 		static Date MaxDate();
 		static Date MinDate();
 
 	private:
 		long long days = 0;
+		long long day = 1;
+		long long month = 1;
+		long long year = 1;
 
 		void Round();
 
@@ -101,17 +107,19 @@ namespace dt
 		static void ToDate(long long& day, long long& month, long long& year);
 		static bool IsDatable(long long day, long long month, long long year);
 
-		static const unsigned char days_in_months[12];
-		static const unsigned char days_in_months_leap[12];
+		static constexpr const unsigned char days_in_months[12] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+		static constexpr const unsigned char days_in_months_leap[12] = { 31,29,31,30,31,30,31,31,30,31,30,31 };
 
-		static const long long maxValue;
-		static const long long minValue;
+		static constexpr const long long maxValue = LLONG_MAX / 400 - 1;
+		static constexpr const long long minValue = LLONG_MIN / 400;
 	};
+
+	unsigned CountDaysInMonth(const unsigned char month, const bool leap = false);
 
 	Date Opposite(Date date);
 
 	std::ostream& operator<<(std::ostream& out, const Date& date);
 	std::istream& operator>>(std::istream& in, Date& date);
 
-	Date operator""_date(const char* date, size_t size);
+	const Date operator""_date(const char* date, const size_t size);
 }

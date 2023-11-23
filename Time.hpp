@@ -11,6 +11,7 @@ namespace dt
 		friend std::istream& operator>>(std::istream& in, Time& time);
 		friend class DateTime;
 	public:
+
 		#pragma region Конструкторы
 
 		Time();
@@ -78,9 +79,10 @@ namespace dt
 
 		#pragma endregion
 
-		static Time Now(float UTC = 0);
+		static Time Now();
 		static Time MaxTime();
 		static Time MinTime();
+		static float UTC();
 
 	private:
 		int milliseconds = 0;
@@ -89,7 +91,7 @@ namespace dt
 		static int ToMilliseconds(int hours, int minuts, int seconds, int milliseconds);
 		static void ToTime(int& hours, int& minuts, int& seconds, int& milliseconds);
 		static bool IsTimeabe(int hours, int minuts, int seconds, int milliseconds);
-		static const int maxValue;
+		constexpr static const int maxValue = 86400000;
 	};
 
 	Time Opposite(Time value);
