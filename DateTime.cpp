@@ -365,6 +365,15 @@ namespace dt
 		return date;
 	}
 
+	DateTime& DateTime::operator=(const DateTime& other)
+	{
+		if (this == &other)
+			return *this;
+		date = other.date;
+		time = other.time;
+		return *this;
+	}
+
 	bool DateTime::operator<(const DateTime& dt) const {
 		if (date.days < dt.date.days)
 			return true;

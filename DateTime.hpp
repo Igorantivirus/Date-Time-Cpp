@@ -10,6 +10,7 @@ namespace dt
 {
 	class DateTime
 	{
+	public:
 		friend std::ostream& operator<<(std::ostream& out, const DateTime& dt);
 		friend std::istream& operator>>(std::istream& in, DateTime& dt);
 	public:
