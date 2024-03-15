@@ -37,9 +37,29 @@ static void fillStrDate(const long long num, std::string& res, const char c)
 	res.replace(pos, count + 1, newV);
 }
 
+static float UTCOneCall()
+{
+	time_t now = time(nullptr);
+	tm localTime1, localTime2;
+	localtime_s(&localTime1, &now);
+	gmtime_s(&localTime2, &now);
+	if (localTime1.tm_hour == 0)
+		localTime1.tm_hour = 24;
+	if (localTime2.tm_hour == 0)
+		localTime2.tm_hour = 24;
+	return
+		((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
+			(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
+}
+static float UTC()
+{
+	const static float res = UTCOneCall();
+	return res;
+}
+
 namespace dt
 {
-	inline constexpr bool Leap(long long year)
+	inline constexpr bool Leap(const long long year)
 	{
 		return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
 	}
@@ -342,12 +362,17 @@ namespace dt
 
 	#pragma endregion
 
-	Date Date::Now()
+	Date Date::UnixNow()
 	{
-		time_t now = time(nullptr);
-		tm date;
-		localtime_s(&date, &now);
-		return Date(date.tm_mday, date.tm_mon+1, date.tm_year+1900);
+		long long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		long long days = now / 86400 + 719162;
+		return Date(days);
+	}
+	Date Date::SystemNow()
+	{
+		long long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count() + static_cast<long long>(UTC() * 3600);
+		long long days = now / 86400 + 719162;
+		return Date(days);
 	}
 	Date Date::MaxDate()
 	{

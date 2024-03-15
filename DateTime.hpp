@@ -112,7 +112,8 @@ namespace dt
 
 		#pragma endregion
 
-		static DateTime Now();
+		static DateTime UnixNow();
+		static DateTime SystemNow();
 		static DateTime MaxDateTime();
 		static DateTime MinDateTime();
 

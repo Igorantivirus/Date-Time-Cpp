@@ -467,7 +467,13 @@ namespace dt
 
 	#pragma endregion
 
-	DateTime DateTime::Now() {
+
+	DateTime DateTime::UnixNow()
+	{
+		long long milliseconds = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+		return DateTime(static_cast<int>(milliseconds / 86400000 + 719162), static_cast<int>(milliseconds % 86400000));
+	}
+	DateTime DateTime::SystemNow() {
 		long long milliseconds = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
 			static_cast<long long>(Time::UTC() * 3600000));
 		return DateTime(static_cast<int>(milliseconds / 86400000 + 719162), static_cast<int>(milliseconds % 86400000));

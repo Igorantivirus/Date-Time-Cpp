@@ -79,7 +79,7 @@ namespace dt
 
 		#pragma endregion
 
-		static Time Now();
+		static Time UnixNow();
 		static Time SystemNow();
 		static Time MaxTime();
 		static Time MinTime();
