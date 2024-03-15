@@ -2,12 +2,12 @@
 
 #include<chrono>
 
-void fillFromStrTime(const char* time, int arr[4])
+void fillFromStrTime(const char* time, unsigned short arr[6])
 {
 	if (time == nullptr) {
 		return;
 	}
-	for (char DateCount = 0; DateCount < 4; DateCount++) {
+	for (char DateCount = 0; DateCount < 6; DateCount++) {
 		if (time[0] == '\0') {
 			break;
 		}
@@ -19,7 +19,7 @@ void fillFromStrTime(const char* time, int arr[4])
 		time++;
 	}
 }
-void fillStrTime(const int num, std::string& res, const char c)
+void fillStrTime(const unsigned short num, std::string& res, const char c)
 {
 	size_t pos;
 	const char pr[3] = { '%', c, '\0' };
@@ -52,176 +52,185 @@ namespace dt
 {
 	#pragma region class Time
 
+	bool Time::TimePoint::ValidTime() const
+	{
+		return hours < 24 && minutes < 60 && seconds < 60 && milliseconds < 1000 && microseconds < 1000 && nanoseconds < 1000;
+	}
+
 	#pragma region Конструкторы
 
-	Time::Time() : milliseconds(0) {}
-	Time::Time(int milliseconds) : milliseconds(milliseconds)
+	Time::Time(const long long n)
 	{
-		Round();
+		Assign(n);
 	}
-	Time::Time(int hours, int minuts, int seconds, int milliseconds)
+	Time::Time(const Time::TimePoint& p)
 	{
-		Assign(hours, minuts, seconds, milliseconds);
-	}
-	Time::Time(const char* time)
-	{
-		Assign(time);
+		Assign(p);
 	}
 	Time::Time(const std::string& time)
 	{
 		Assign(time);
 	}
-	Time::Time(const char* time, const char* example)
-	{
-		Assign(time, example);
-	}
 	Time::Time(const std::string& time, const std::string& example)
 	{
 		Assign(time, example);
 	}
-	Time::Time(const Time& other) : milliseconds(other.milliseconds) {}
 
 	#pragma endregion
 
 	#pragma region Методы
 
-	void Time::Assign(int milliseconds)
+	void Time::Assign(const long long n)
 	{
-		this->milliseconds = milliseconds;
+		nanoseconds = n;
 		Round();
 	}
-	void Time::Assign(int hours, int minuts, int seconds, int milliseconds)
+	void Time::Assign(const Time::TimePoint& p)
 	{
-		if (!IsTimeabe(hours, minuts, seconds, milliseconds))
+		if (!p.ValidTime())
 			return;
-		this->milliseconds = ToMilliseconds(hours, minuts, seconds, milliseconds);
-		Round();
-	}
-	void Time::Assign(const char* time)
-	{
-		int arr[4] = {};
-		fillFromStrTime(time, arr);
-		Assign(arr[0], arr[1], arr[2], arr[3]);
+		point = p;
+		nanoseconds = ToNanoseconds(point);
 	}
 	void Time::Assign(const std::string& time)
 	{
-		Assign(time.c_str());
-	}
-	void Time::Assign(const char* time, const char* example)
-	{
-		int arr[4] = {};
-		fillFromStrTime(time, arr);
-		int h = 0, m = 0, s = 0, mi = 0;
-		for (char i = 0; i < 3 && *example != '\0'; i++)
-		{
-			while (*example != '\0' && *example++ != '%') {}
-			if (*example == 'h')
-				h = arr[i];
-			else if (*example == 'm')
-				m = arr[i];
-			else if (*example == 's')
-				s = arr[i];
-			else if (*example == 'S')
-				mi = arr[i];
-		}
-		Assign(h, m, s, mi);
+		unsigned short arr[6] = {};
+		fillFromStrTime(time.c_str(), arr);
+		Assign(Time::TimePoint{arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]});
 	}
 	void Time::Assign(const std::string& time, const std::string& example)
 	{
-		Assign(time.c_str(), example.c_str());
-	}
-	void Time::Assign(const Time& other)
-	{
-		milliseconds = other.milliseconds;
+		unsigned short arr[6] = {};
+		fillFromStrTime(time.c_str(), arr);
+		int h = 0, m = 0, s = 0, mi = 0;
+
+		const char* prExampl = example.c_str();
+
+		for (char i = 0; i < 3 && *prExampl != '\0'; i++)
+		{
+			while (*prExampl != '\0' && *prExampl++ != '%') {}
+			if (*prExampl == 'h')
+				h = arr[i];
+			else if (*prExampl == 'm')
+				m = arr[i];
+			else if (*prExampl == 's')
+				s = arr[i];
+			else if (*prExampl == 'S')
+				mi = arr[i];
+		}
+		Assign(Time::TimePoint{ arr[0], arr[1], arr[2], arr[3], arr[4], arr[5] });
 	}
 
-	int Time::GetAllMilliseconds() const
+	const long long int Time::GetAllNanoseconds() const
 	{
-		return milliseconds;
+		return nanoseconds;
 	}
-	int Time::GetMilliseconds() const
+	const Time::TimePoint& Time::GetTimePoint() const
 	{
-		return milliseconds % 1000;
-	}
-	int Time::GetSeconds() const
-	{
-		return milliseconds / 1000 % 60;
-	}
-	int Time::GetMinuts() const
-	{
-		return milliseconds / 60000 % 60;
-	}
-	int Time::GetHours() const
-	{
-		return milliseconds / 3600000;
+		return point;
 	}
 
-	Time& Time::SetAllMilliseconds(int value)
+	const unsigned short Time::GetHours()			const
 	{
-		milliseconds = value;
-		Round();
+		return point.hours;
+	}
+	const unsigned short Time::GetMinutes()			const
+	{
+		return point.minutes;
+	}
+	const unsigned short Time::GetSeconds()			const
+	{
+		return point.seconds;
+	}
+	const unsigned short Time::GetMilliseconds()	const
+	{
+		return point.milliseconds;
+	}
+	const unsigned short Time::GetMicroseconds()	const
+	{
+		return point.microseconds;
+	}
+	const unsigned short Time::GetNanoseconds()		const
+	{
+		return point.nanoseconds;
+	}
+
+	Time& Time::SetHours(const unsigned short v)
+	{
+		if (v < 0 && v >= 24)
+			return *this;
+		point.hours = v;
+		nanoseconds = ToNanoseconds(point);
 		return *this;
 	}
-	Time& Time::SetMilliseconds(int value)
+	Time& Time::SetMinuts(const unsigned short v)
 	{
-		if (value >= 1000 || value < 0)
+		if (v < 0 && v >= 60)
 			return *this;
-		milliseconds = milliseconds - milliseconds % 1000 + value;
-		Round();
+		point.minutes = v;
+		nanoseconds = ToNanoseconds(point);
 		return *this;
 	}
-	Time& Time::SetSeconds(int value)
+	Time& Time::SetSeconds(const unsigned short v)
 	{
-		if (value >= 60 || value < 0)
+		if (v < 0 && v >= 60)
 			return *this;
-		milliseconds = milliseconds - milliseconds % 60000 + value * 1000 + milliseconds % 1000;
-		Round();
+		point.seconds = v;
+		nanoseconds = ToNanoseconds(point);
 		return *this;
 	}
-	Time& Time::SetMinuts(int value)
+	Time& Time::SetMilliseconds(const unsigned short v)
 	{
-		if (value >= 60 || value < 0)
+		if (v < 0 && v >= 1000)
 			return *this;
-		milliseconds = milliseconds - milliseconds % 3600000 + value * 60000 + milliseconds % 60000;
-		Round();
+		point.milliseconds = v;
+		nanoseconds = ToNanoseconds(point);
 		return *this;
 	}
-	Time& Time::SetHours(int value)
+	Time& Time::SetMicroseconds(const unsigned short v)
 	{
-		if (value >= 24 || value < 0)
+		if (v < 0 && v >= 1000)
 			return *this;
-		milliseconds = milliseconds % 3600000 + value * 3600000;
-		Round();
+		point.microseconds = v;
+		nanoseconds = ToNanoseconds(point);
+		return *this;
+	}
+	Time& Time::SetNanoseconds(const unsigned short v)
+	{
+		if (v < 0 && v >= 1000)
+			return *this;
+		point.nanoseconds = v;
+		nanoseconds = ToNanoseconds(point);
 		return *this;
 	}
 
 	Time Time::MakeOpposite()
 	{
-		milliseconds = 86400000 - milliseconds;
+		nanoseconds = MAX_NANOSECONDS_VALUE - nanoseconds;
 		Round();
 		return *this;
 	}
 
 	std::string Time::ToString() const
 	{
-		int h, m, s, mi = milliseconds;
-		ToTime(h, m, s, mi);
-		char pr[13] = {
-			char(h / 10 + '0'), char(h % 10 + '0'), ':',
-			char(m / 10 + '0'), char(m % 10 + '0'), ':',
-			char(s / 10 + '0'), char(s % 10 + '0'), ':',
-			char(mi / 100 % 10 + '0'), char(mi / 10 % 10 + '0'), char(mi % 10 + '0'), '\0'
+		char pr[21] = {
+			char(point.hours / 10 + '0'), char(point.hours % 10 + '0'), ':',
+			char(point.minutes / 10 + '0'), char(point.minutes % 10 + '0'), ':',
+			char(point.seconds / 10 + '0'), char(point.seconds % 10 + '0'), ':',
+			char(point.milliseconds / 100 % 10 + '0'), char(point.milliseconds / 10 % 10 + '0'), char(point.milliseconds % 10 + '0'), ':',
+			char(point.microseconds / 100 % 10 + '0'), char(point.microseconds / 10 % 10 + '0'), char(point.microseconds % 10 + '0'), ':',
+			char(point.nanoseconds / 100 % 10 + '0'), char(point.nanoseconds / 10 % 10 + '0'), char(point.nanoseconds % 10 + '0'), '\0'
 		};
 		return std::string(pr);
 	}
 	std::string Time::ToString(std::string example) const
 	{
-		int h, m, s, mi = milliseconds;
-		ToTime(h, m, s, mi);
-		fillStrTime(h, example, 'h');
-		fillStrTime(m, example, 'm');
-		fillStrTime(s, example, 's');
-		fillStrTime(mi, example, 'S');
+		fillStrTime(point.hours, example, 'h');
+		fillStrTime(point.minutes, example, 'm');
+		fillStrTime(point.seconds, example, 's');
+		fillStrTime(point.milliseconds, example, 'S');
+		fillStrTime(point.microseconds, example, 'C');
+		fillStrTime(point.nanoseconds, example, 'N');
 		return example;
 	}
 
@@ -229,114 +238,101 @@ namespace dt
 
 	#pragma region Операторы
 
-	Time& Time::operator=(const Time& other)
-	{
-		milliseconds = other.milliseconds;
-		return *this;
-	}
-
 	bool Time::operator==(const Time& other) const
 	{
-		return milliseconds == other.milliseconds;
+		return nanoseconds == other.nanoseconds;
 	}
 	bool Time::operator!=(const Time& other) const
 	{
-		return milliseconds != other.milliseconds;
+		return nanoseconds != other.nanoseconds;
 	}
 	bool Time::operator<(const Time& other) const
 	{
-		return milliseconds < other.milliseconds;
+		return nanoseconds < other.nanoseconds;
 	}
 	bool Time::operator>(const Time& other) const
 	{
-		return milliseconds > other.milliseconds;
+		return nanoseconds > other.nanoseconds;
 	}
 	bool Time::operator<=(const Time& other) const
 	{
-		return milliseconds <= other.milliseconds;
+		return nanoseconds <= other.nanoseconds;
 	}
 	bool Time::operator>=(const Time& other) const
 	{
-		return milliseconds >= other.milliseconds;
+		return nanoseconds >= other.nanoseconds;
 	}
 
 	Time Time::operator+(const Time& other) const
 	{
-		return Time(milliseconds + other.milliseconds);
+		Time res(*this);
+		return res += other;
 	}
 	Time Time::operator-(const Time& other) const
 	{
-		return Time(milliseconds - other.milliseconds);
+		Time res(*this);
+		return res -= other;
 	}
 	Time Time::operator*(int value) const
 	{
-		return Time(milliseconds * value);
+		Time res(*this);
+		return res *= value;
 	}
 	Time Time::operator/(int value) const
 	{
-		return Time(milliseconds / value);
-	}
-	Time Time::operator%(int value) const
-	{
-		return Time(milliseconds % value);
+		Time res(*this);
+		return res /= value;
 	}
 
 	Time Time::operator+=(const Time& other)
 	{
-		milliseconds += other.milliseconds;
+		nanoseconds += other.nanoseconds;
 		Round();
 		return *this;
 	}
 	Time Time::operator-=(const Time& other)
 	{
-		milliseconds -= other.milliseconds;
+		nanoseconds -= other.nanoseconds;
 		Round();
 		return *this;
 	}
 	Time Time::operator*=(int value)
 	{
-		milliseconds *= value;
+		nanoseconds *= value;
 		Round();
 		return *this;
 	}
 	Time Time::operator/=(int value)
 	{
-		milliseconds /= value;
-		Round();
-		return *this;
-	}
-	Time Time::operator%=(int value)
-	{
-		milliseconds %= value;
+		nanoseconds /= value;
 		Round();
 		return *this;
 	}
 
 	#pragma endregion
 
-	Time Time::UnixNow()
-	{
-		return Time(
-			(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
-				static_cast<long long>(UTC() * 3600000)) % 86400000
-		);
-	}
 	Time Time::SystemNow()
 	{
 		return Time(
-			(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
-			% 86400000
+			std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
+			static_cast<long long int>(SystemUTC()) * (MAX_NANOSECONDS_VALUE / 24)
+		);
+	}
+	Time Time::UnixNow()
+	{
+		return Time(
+			(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 		);
 	}
 	Time Time::MaxTime()
 	{
-		return Time(maxValue - 1);
+		return Time(MAX_NANOSECONDS_VALUE - 1);
 	}
 	Time Time::MinTime()
 	{
 		return Time(0);
 	}
-	float Time::UTC()
+	float Time::SystemUTC()
 	{
 		static const float res = UTCOnceCall();
 		return res;
@@ -344,35 +340,44 @@ namespace dt
 
 	void Time::Round()
 	{
-		while (milliseconds < 0)
-			milliseconds += maxValue;
-		milliseconds %= maxValue;
+		nanoseconds %= MAX_NANOSECONDS_VALUE;
+		if (nanoseconds < 0)
+			nanoseconds += MAX_NANOSECONDS_VALUE;
+		ToTime(point, nanoseconds);
 	}
 
-	int Time::ToMilliseconds(int hours, int minuts, int seconds, int milliseconds)
+	long long Time::ToNanoseconds(const Time::TimePoint& point)
 	{
-		return
-			milliseconds +
-			seconds * 1000 +
-			minuts * 60 * 1000 +
-			hours * 60 * 60 * 1000;
+		return point.hours * 60LL * 60LL * 1000LL * 1000LL * 1000LL +
+			point.minutes * 60LL * 1000LL * 1000LL * 1000LL +
+			point.seconds * 1000LL * 1000LL * 1000LL +
+			point.milliseconds * 1000LL * 1000LL +
+			point.microseconds * 1000LL +
+			point.nanoseconds;
 	}
-	void Time::ToTime(int& hours, int& minuts, int& seconds, int& milliseconds)
+	void Time::ToTime(Time::TimePoint& point, long long nanoseconds)
 	{
-		seconds = milliseconds / 1000;
+		long long int microseconds = nanoseconds / 1000;
+		nanoseconds -= microseconds * 1000;
+
+		long long int milliseconds = microseconds / 1000;
+		microseconds -= milliseconds * 1000;
+
+		long long int seconds = milliseconds / 1000;
 		milliseconds -= seconds * 1000;
-		minuts = seconds / 60;
-		seconds -= minuts * 60;
-		hours = minuts / 60;
-		minuts -= hours * 60;
-	}
-	bool Time::IsTimeabe(int hours, int minuts, int seconds, int milliseconds)
-	{
-		return
-			(hours >= 0 && hours < 24) &&
-			(minuts >= 0 && minuts < 60) &&
-			(seconds >= 0 && seconds < 60) &&
-			(milliseconds >= 0 && milliseconds < 1000);
+
+		long long int minutes = seconds / 60;
+		seconds -= minutes * 60;
+
+		long long int hours = minutes / 60;
+		minutes -= hours * 60;
+
+		point.hours = static_cast<int>(hours);
+		point.minutes = static_cast<int>(minutes);
+		point.seconds = static_cast<int>(seconds);
+		point.milliseconds = static_cast<int>(milliseconds);
+		point.microseconds = static_cast<int>(microseconds);
+		point.nanoseconds = static_cast<int>(nanoseconds);
 	}
 
 	#pragma endregion
@@ -382,12 +387,12 @@ namespace dt
 		return value.MakeOpposite();
 	}
 
-	void Sleep(int milliseconds) {
-		long long t = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + milliseconds;
+	void Sleep(const long long int nanoseconds) {
+		long long t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + nanoseconds;
 		while (t > std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {}
 	}
 	void Sleep(const Time& time) {
-		return Sleep(time.GetAllMilliseconds());
+		return Sleep(time.GetAllNanoseconds());
 	}
 
 	std::ostream& operator<<(std::ostream& out, const Time& time)
@@ -396,8 +401,8 @@ namespace dt
 	}
 	std::istream& operator>>(std::istream& in, Time& time)
 	{
-		char pr[12] = {};
-		in.getline(pr, 12);
+		char pr[21] = {};
+		in.getline(pr, 21);
 		time.Assign(pr);
 		return in;
 	}
@@ -407,20 +412,28 @@ namespace dt
 		return Time(time);
 	}
 
-	Time hours(int value)
+	Time hours(const long long value)
 	{
-		return Time(value, 0, 0, 0);
+		return Time(value * 1000 * 1000 * 1000 * 60 * 60);
 	}
-	Time minuts(int value)
+	Time minutes(const long long value)
 	{
-		return Time(0, value, 0, 0);
+		return Time(value * 1000 * 1000 * 1000 * 60);
 	}
-	Time seconds(int value)
+	Time seconds(const long long value)
 	{
-		return Time(0, 0, value, 0);
+		return Time(value * 1000 * 1000 * 1000);
 	}
-	Time milliseconds(int value)
+	Time milliseconds(const long long value)
 	{
-		return Time(0, 0, 0, value);
+		return Time(value * 1000 * 1000);
+	}
+	Time microseconds(const long long value)
+	{
+		return Time(value * 1000);
+	}
+	Time nanoseconds(const long long value)
+	{
+		return Time(value);
 	}
 }

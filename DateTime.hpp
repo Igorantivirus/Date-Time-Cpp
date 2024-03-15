@@ -17,65 +17,60 @@ namespace dt
 
 		#pragma region Конструкторы
 
-		DateTime();
-		DateTime(long long days, int milliseconds);
-		DateTime(const char* dt);
+		DateTime() = default;
+		DateTime(const DateTime& other) = default;
+		DateTime(const long long days, const long long nanoseconds);
 		DateTime(const std::string& dt);
-		DateTime(const char* dt, const char* example);
 		DateTime(const std::string& dt, const std::string& example);
-		DateTime(int days, int months, long long years, int hours, int minuts, int seconds, int milliseconds);
-		DateTime(int days, int months, long long years);
-		DateTime(int hours, int minuts, int seconds, int milliseconds);
+		DateTime(const Date::DatePoint& dp, const Time::TimePoint& tp);
 		DateTime(const Date& date, const Time& time);
-		DateTime(const Date& date);
-		DateTime(const Time& time);
-		DateTime(const DateTime& other);
 
 		#pragma endregion
 
 		#pragma region Методы
 
-		void Assign(long long days, int milliseconds);
-		void Assign(const char* dt);
+		void Assign(const long long days, const long long nanoseconds);
 		void Assign(const std::string& dt);
-		void Assign(const char* dt, const char* example);
 		void Assign(const std::string& dt, const std::string& example);
-		void Assign(int days, int months, long long years, int hours, int minuts, int seconds, int milliseconds);
-		void Assign(int days, int months, long long years);
-		void Assign(int hours, int minuts, int seconds, int milliseconds);
+		void Assign(const Date::DatePoint& dp, const Time::TimePoint& tp);
 		void Assign(const Date& date, const Time& time);
-		void Assign(const Date& date);
-		void Assign(const Time& time);
-		void Assign(const DateTime& other);
 
 		bool IsLeap() const;
 
-		DateTime& SetAllDays(long long days);
-		DateTime& SetDay(int day);
-		DateTime& SetMonth(int month);
-		DateTime& SetYear(long long year);
-		DateTime& SetDate(const Date& date);
-		DateTime& SetAllMilliseconds(int value);
-		DateTime& SetMilliseconds(int value);
-		DateTime& SetSeconds(int value);
-		DateTime& SetMinuts(int value);
-		DateTime& SetHours(int value);
-		DateTime& SetTime(const Time& time);
+		DateTime& SetAllDays(const long long v);
+		DateTime& SetDay(const unsigned short v);
+		DateTime& SetMonth(const unsigned short v);
+		DateTime& SetYear(const long long v);
+		DateTime& SetDate(const Date& v);
+		DateTime& SetDatePoint(const Date::DatePoint& v);
+		DateTime& SetAllNanoseconds(const long long v);
+		DateTime& SetNanoseconds(const unsigned short v);
+		DateTime& SetMicroseconds(const unsigned short v);
+		DateTime& SetMilliseconds(const unsigned short v);
+		DateTime& SetSeconds(const unsigned short v);
+		DateTime& SetMinutes(const unsigned short v);
+		DateTime& SetHours(const unsigned short v);
+		DateTime& SetTime(const Time& v);
+		DateTime& SetTimePoint(const Time::TimePoint& v);
 
-		long long	GetAllDays()			const;
-		int			GetDay()				const;
-		int			GetMonth()				const;
-		long long	GetYear()				const;
-		int			GetWeekCount()			const;
-		int			GetDayWeek()			const;
-		Date		GetDate()				const;
-		int			GetAllMilliseconds()	const;
-		int			GetMilliseconds()		const;
-		int			GetSeconds()			const;
-		int			GetMinuts()				const;
-		int			GetHours()				const;
-		Time		GetTime()				const;
-		unsigned	GetCountDaysInMonth()	const;
+		long long				GetAllDays()			const;
+		unsigned short			GetDay()				const;
+		unsigned short			GetMonth()				const;
+		long long				GetYear()				const;
+		long long				GetWeekCount()			const;
+		unsigned short			GetDayWeek()			const;
+		const Date&				GetDate()				const;
+		const Date::DatePoint&	GetDatePoint()			const;
+		long long				GetAllNanoseconds()		const;
+		unsigned short			GetNanoseconds()		const;
+		unsigned short			GetMicroseconds()		const;
+		unsigned short			GetMilliseconds()		const;
+		unsigned short			GetSeconds()			const;
+		unsigned short			GetMinutes()			const;
+		unsigned short			GetHours()				const;
+		const Time&				GetTime()				const;
+		const Time::TimePoint&	GetTimePoint()			const;
+		unsigned short			GetCountDaysInMonth()	const;
 
 		DateTime& MakeOpposite();
 		DateTime& MakeOppositeTime();
@@ -91,7 +86,7 @@ namespace dt
 		operator Date() const;
 		operator Time() const;
 
-		DateTime& operator=(const DateTime& other);
+		DateTime& operator=(const DateTime& other) = default;
 
 		bool operator==(const DateTime& dt) const;
 		bool operator!=(const DateTime& dt) const;
@@ -102,13 +97,9 @@ namespace dt
 
 		DateTime operator+(const DateTime& dt) const;
 		DateTime operator-(const DateTime& dt) const;
-		DateTime operator*(long long value) const;
-		DateTime operator/(long long value) const;
 
 		DateTime& operator+=(const DateTime& dt);
 		DateTime& operator-=(const DateTime& dt);
-		DateTime& operator*=(long long value);
-		DateTime& operator/=(long long value);
 
 		#pragma endregion
 
