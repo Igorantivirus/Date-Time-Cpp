@@ -37,6 +37,16 @@ void fillStrTime(const int num, std::string& res, const char c)
 	res.replace(pos, count + 1, newV);
 }
 
+static float UTCOnceCall()
+{
+	time_t now = time(nullptr);
+	tm localTime1, localTime2;
+	localtime_s(&localTime1, &now);
+	gmtime_s(&localTime2, &now);
+	return
+		((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
+			(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
+}
 
 namespace dt
 {
@@ -311,6 +321,13 @@ namespace dt
 				static_cast<long long>(UTC() * 3600000)) % 86400000
 		);
 	}
+	Time Time::SystemNow()
+	{
+		return Time(
+			(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
+			% 86400000
+		);
+	}
 	Time Time::MaxTime()
 	{
 		return Time(maxValue - 1);
@@ -321,13 +338,8 @@ namespace dt
 	}
 	float Time::UTC()
 	{
-		time_t now = time(nullptr);
-		tm localTime1, localTime2;
-		localtime_s(&localTime1, &now);
-		gmtime_s(&localTime2, &now);
-		return
-			((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
-				(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
+		static const float res = UTCOnceCall();
+		return res;
 	}
 
 	void Time::Round()

@@ -80,6 +80,7 @@ namespace dt
 		#pragma endregion
 
 		static Time Now();
+		static Time SystemNow();
 		static Time MaxTime();
 		static Time MinTime();
 		static float UTC();
