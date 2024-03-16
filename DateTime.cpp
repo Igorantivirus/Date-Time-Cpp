@@ -280,7 +280,7 @@ namespace dt
 	{
 		return date.GetWeekCount();
 	}
-	unsigned short			DateTime::GetDayWeek()			const
+	DayWeek					DateTime::GetDayWeek()			const
 	{
 		return date.GetDayWeek();
 	}
@@ -455,6 +455,11 @@ namespace dt
 	}
 	DateTime DateTime::MinDateTime() {
 		return DateTime(MIN_DAYS_VALUE, MAX_NANOSECONDS_VALUE - 1);
+	}
+
+	std::string DateTime::TimeZoneName()
+	{
+		return Date::TimeZoneName();
 	}
 
 	void DateTime::Round()

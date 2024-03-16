@@ -58,7 +58,7 @@ namespace dt
 		unsigned short			GetMonth()				const;
 		long long				GetYear()				const;
 		long long				GetWeekCount()			const;
-		unsigned short			GetDayWeek()			const;
+		DayWeek					GetDayWeek()			const;
 		const Date&				GetDate()				const;
 		const Date::DatePoint&	GetDatePoint()			const;
 		long long				GetAllNanoseconds()		const;
@@ -107,6 +107,7 @@ namespace dt
 		static DateTime SystemNow();
 		static DateTime MaxDateTime();
 		static DateTime MinDateTime();
+		static std::string TimeZoneName();
 
 	private:
 		Date date;

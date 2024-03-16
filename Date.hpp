@@ -11,6 +11,18 @@ namespace dt
 {
 	inline constexpr bool Leap(long long year);
 
+	enum class DayWeek : unsigned char
+	{
+		None = 0,
+		Monday,
+		Tuesday,
+		Wednesday,
+		Thursday,
+		Friday,
+		Saturday,
+		Sunday
+	};
+
 	class Date
 	{
 	public:
@@ -61,7 +73,7 @@ namespace dt
 		unsigned short		GetMonth()				const;
 		long long			GetYear()				const;
 		long long			GetWeekCount()			const;
-		unsigned short		GetDayWeek()			const;
+		DayWeek				GetDayWeek()			const;
 		unsigned short		GetCountDaysInMonth()	const;
 		const DatePoint&	GetDatePoint()			const;
 
@@ -100,6 +112,7 @@ namespace dt
 		static Date SystemNow();
 		static Date MaxDate();
 		static Date MinDate();
+		static std::string TimeZoneName();
 
 	private:
 		long long days = 0;

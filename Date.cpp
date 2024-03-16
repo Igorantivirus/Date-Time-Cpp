@@ -207,12 +207,12 @@ namespace dt
 	{
 		return static_cast<int>(std::abs(days) / 7);
 	}
-	unsigned short		Date::GetDayWeek()			const
+	DayWeek				Date::GetDayWeek()			const
 	{
 		if (days >= 0)
-			return days % 7 + 1;
+			return static_cast<DayWeek>(days % 7 + 1);
 		else
-			return  8 - ((std::abs(days) - 1) % 7 + 1);
+			return  static_cast<DayWeek>(8 - ((std::abs(days) - 1) % 7 + 1));
 	}
 	unsigned short		Date::GetCountDaysInMonth()	const
 	{
@@ -395,6 +395,11 @@ namespace dt
 		point.day = (unsigned short)day;
 		point.month = (unsigned short)month;
 		point.year = year;
+	}
+	std::string Date::TimeZoneName()
+	{
+		const static std::string res(std::chrono::current_zone()->name().begin(), std::chrono::current_zone()->name().end());
+		return res;
 	}
 
 	#pragma endregion
