@@ -1,41 +1,6 @@
 #include "DateTime.hpp"
 
-#include<chrono>
-
-char fillFromStrDT(const char* dt, long long arr[9])
-{
-	if (dt == nullptr) {
-		return 0;
-	}
-	char DateCount;
-	for (DateCount = 0; DateCount < 9; DateCount++) {
-		if (dt[0] == '\0') {
-			break;
-		}
-		arr[DateCount] = atoll(dt);
-		if (dt[0] == '-') {
-			dt++;
-		}
-		for (; (dt[0] >= '0' && dt[0] <= '9'); dt++) {}
-		dt++;
-	}
-	return DateCount;
-}
-void fillStrDT(const long long num, std::string& res, const char c)
-{
-	size_t pos;
-	const char pr[3] = { '%', c, '\0' };
-	if ((pos = res.find(pr)) == std::string::npos)
-		return;
-	int count = 1;
-	for (size_t i = pos + 2; i < res.size(); i++)
-		if (res[i] == c)
-			count++;
-	std::string newV = std::to_string(num);
-	while (newV.size() < count)
-		newV = '0' + newV;
-	res.replace(pos, count + 1, newV);
-}
+#include"DateTimeHelpers.hpp"
 
 namespace dt
 {
@@ -61,6 +26,14 @@ namespace dt
 	{
 		Assign(date, time);
 	}
+	DateTime::DateTime(const Date& d)
+	{
+		Assign(d, {});
+	}
+	DateTime::DateTime(const Time& t)
+	{
+		Assign({}, t);
+	}
 
 	#pragma endregion
 
@@ -75,52 +48,52 @@ namespace dt
 	void DateTime::Assign(const std::string& dt)
 	{
 		long long arr[9] = { 1,1,1,0,0,0,0,0,0 };
-		char pr = fillFromStrDT(dt.c_str(), arr);
+		char pr = fillFromStrDT(dt.c_str(), arr, 9);
 		if (pr == 3)
 		{
 			Date::DatePoint p;
 			p.ad = arr[0] > 0;
-			p.day = std::abs(arr[0]);
-			p.month = arr[1];
+			p.day = toUShort(std::abs(arr[0]));
+			p.month = toUShort(arr[1]);
 			p.year = arr[2];
 			Assign(p, {});
 		}
 		else if (pr == 2 || pr == 3 || pr == 4)
 		{
 			Time::TimePoint tp;
-			tp.hours = arr[0];
-			tp.minutes = arr[1];
-			tp.seconds = arr[2];
-			tp.milliseconds = arr[3];
+			tp.hours = toUShort(arr[0]);
+			tp.minutes = toUShort(arr[1]);
+			tp.seconds = toUShort(arr[2]);
+			tp.milliseconds = toUShort(arr[3]);
 			Assign({}, tp);
 		}
 		else if (pr == 5)
 		{
 			Date::DatePoint p;
 			p.ad = arr[0] > 0;
-			p.day = std::abs(arr[0]);
-			p.month = arr[1];
+			p.day = toUShort(std::abs(arr[0]));
+			p.month = toUShort(arr[1]);
 			p.year = arr[2];
 			Time::TimePoint tp;
-			tp.hours = arr[3];
-			tp.minutes = arr[4];
+			tp.hours = toUShort(arr[3]);
+			tp.minutes = toUShort(arr[4]);
 			Assign(p, tp);
 		}
 		else
 		{
 			Date::DatePoint p;
 			p.ad = arr[0] > 0;
-			p.day = std::abs(arr[0]);
-			p.month = arr[1];
+			p.day = toUShort(std::abs(arr[0]));
+			p.month = toUShort(arr[1]);
 			p.year = arr[2];
 
 			Time::TimePoint tp;
-			tp.hours = arr[3];
-			tp.minutes = arr[4];
-			tp.seconds = arr[5];
-			tp.milliseconds = arr[6];
-			tp.microseconds = arr[7];
-			tp.nanoseconds = arr[8];
+			tp.hours = toUShort(arr[3]);
+			tp.minutes = toUShort(arr[4]);
+			tp.seconds = toUShort(arr[5]);
+			tp.milliseconds = toUShort(arr[6]);
+			tp.microseconds = toUShort(arr[7]);
+			tp.nanoseconds = toUShort(arr[8]);
 
 			Assign(p, tp);
 		}
@@ -128,7 +101,7 @@ namespace dt
 	void DateTime::Assign(const std::string& dt, const std::string& example)
 	{
 		long long arr[9] = { 1,1,1,0,0,0,0,0,0 };
-		fillFromStrDT(dt.c_str(), arr);
+		fillFromStrDT(dt.c_str(), arr, 9);
 		const char* exmpl = example.c_str();
 		long long d = 1, m = 1, y = 1, h = 0, mi = 0, s = 0, mil = 0, mic = {}, nan = {};
 		for (auto i = 0; i < 7 && *exmpl != '\0'; i++)
@@ -155,16 +128,16 @@ namespace dt
 		}
 		Date::DatePoint dp;
 		dp.ad = d > 0;
-		dp.day = std::abs(d);
-		dp.month = m;
+		dp.day = toUShort(std::abs(d));
+		dp.month = toUShort(m);
 		dp.year = y;
 
 		Time::TimePoint tp;
-		tp.hours = h;
-		tp.minutes = mi;
-		tp.milliseconds = mil;
-		tp.microseconds = mic;
-		tp.nanoseconds = nan;
+		tp.hours = toUShort(h);
+		tp.minutes = toUShort(mi);
+		tp.milliseconds = toUShort(mil);
+		tp.microseconds = toUShort(mic);
+		tp.nanoseconds = toUShort(nan);
 
 		Assign(dp, tp);
 	}
@@ -280,7 +253,7 @@ namespace dt
 	{
 		return date.GetWeekCount();
 	}
-	DayWeek					DateTime::GetDayWeek()			const
+	unsigned short			DateTime::GetDayWeek()			const
 	{
 		return date.GetDayWeek();
 	}
@@ -442,12 +415,11 @@ namespace dt
 
 	DateTime DateTime::UnixNow()
 	{
-		long long nanoseconds = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+		long long nanoseconds = GetNowNanoseconds();
 		return DateTime(static_cast<long long>(nanoseconds / MAX_NANOSECONDS_VALUE + 719162), static_cast<long long>(nanoseconds % MAX_NANOSECONDS_VALUE));
 	}
 	DateTime DateTime::SystemNow() {
-		long long nanoseconds = (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
-			static_cast<long long>(Time::SystemUTC()) * (MAX_NANOSECONDS_VALUE / 24));
+		const long long nanoseconds = (GetNowNanoseconds() + static_cast<long long>(GetSystemUTC()) * (MAX_NANOSECONDS_VALUE / 24));
 		return DateTime(static_cast<long long>(nanoseconds / MAX_NANOSECONDS_VALUE + 719162), static_cast<long long>(nanoseconds % MAX_NANOSECONDS_VALUE));
 	}
 	DateTime DateTime::MaxDateTime() {

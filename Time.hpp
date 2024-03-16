@@ -3,7 +3,7 @@
 #include<iostream>
 #include<string>
 
-#define MAX_NANOSECONDS_VALUE 86'400'000'000'000
+#define MAX_NANOSECONDS_VALUE 86400000000000
 
 namespace dt
 {
@@ -66,6 +66,14 @@ namespace dt
 		Time MakeOpposite();
 
 		std::string ToString() const;
+		/*
+		%h - hour
+		%m - minute
+		%s - second
+		%S - millisecond
+		%C - microsecond
+		%N - nanosecond
+		*/
 		std::string ToString(std::string example) const;
 
 		#pragma endregion

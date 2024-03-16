@@ -4,24 +4,12 @@
 #include<iostream>
 #include<limits>
 
-#define MAX_DAYS_VALUE LLONG_MAX / 400 - 1
-#define MIN_DAYS_VALUE LLONG_MIN / 400
+#define MAX_DAYS_VALUE (LLONG_MAX / 400 - 1)
+#define MIN_DAYS_VALUE (LLONG_MIN / 400)
 
 namespace dt
 {
-	inline constexpr bool Leap(long long year);
-
-	enum class DayWeek : unsigned char
-	{
-		None = 0,
-		Monday,
-		Tuesday,
-		Wednesday,
-		Thursday,
-		Friday,
-		Saturday,
-		Sunday
-	};
+	inline const bool Leap(const long long year);
 
 	class Date
 	{
@@ -33,10 +21,11 @@ namespace dt
 		
 		struct DatePoint
 		{
-			bool ad = true;
 			unsigned short day{};
 			unsigned short month{};
 			long long int year{};
+
+			bool ad = true;
 
 			bool ValidDate() const;
 
@@ -62,7 +51,7 @@ namespace dt
 		void Assign(const DatePoint& point);
 		void Assign(const long long int days);
 
-		constexpr bool IsLeap() const;
+		bool IsLeap() const;
 
 		Date& SetDay(int day);
 		Date& SetMonth(int month);
@@ -73,13 +62,17 @@ namespace dt
 		unsigned short		GetMonth()				const;
 		long long			GetYear()				const;
 		long long			GetWeekCount()			const;
-		DayWeek				GetDayWeek()			const;
+		/*@result value from range [1;7]*/
+		unsigned short		GetDayWeek()			const;
 		unsigned short		GetCountDaysInMonth()	const;
 		const DatePoint&	GetDatePoint()			const;
 
 		Date& MakeOpposite();
 
 		std::string ToString()						const;
+		/*%D - day
+		%M - month
+		%Y - year*/
 		std::string ToString(std::string example)	const;
 
 		#pragma endregion

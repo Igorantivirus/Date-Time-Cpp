@@ -24,6 +24,8 @@ namespace dt
 		DateTime(const std::string& dt, const std::string& example);
 		DateTime(const Date::DatePoint& dp, const Time::TimePoint& tp);
 		DateTime(const Date& date, const Time& time);
+		DateTime(const Date& d);
+		DateTime(const Time& t);
 
 		#pragma endregion
 
@@ -58,7 +60,8 @@ namespace dt
 		unsigned short			GetMonth()				const;
 		long long				GetYear()				const;
 		long long				GetWeekCount()			const;
-		DayWeek					GetDayWeek()			const;
+		/*@result value from range [1;7]*/
+		unsigned short			GetDayWeek()			const;
 		const Date&				GetDate()				const;
 		const Date::DatePoint&	GetDatePoint()			const;
 		long long				GetAllNanoseconds()		const;
@@ -77,6 +80,17 @@ namespace dt
 		DateTime& MakeOppositeDate();
 
 		std::string ToString() const;
+		/*
+		%D - day
+		%M - month
+		%Y - year
+		%h - hour
+		%m - minute
+		%s - second
+		%S - millisecond
+		%C - microsecond
+		%N - nanosecond
+		*/
 		std::string ToString(std::string example) const;
 
 		#pragma endregion

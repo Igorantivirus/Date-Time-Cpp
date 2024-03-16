@@ -1,65 +1,10 @@
 #include "Date.hpp"
 
-#include<chrono>
-
-static void fillFromStrDate(const char* date, long long arr[3])
-{
-	if (date == nullptr) {
-		return;
-	}
-	for (int DateCount = 0; DateCount < 3; DateCount++) {
-		if (date[0] == '\0') {
-			break;
-		}
-		arr[DateCount] = atoll(date);
-		if (date[0] == '-') {
-			date++;
-		}
-		for (; (date[0] >= '0' && date[0] <= '9'); date++) {}
-		date++;
-	}
-}
-static void fillStrDate(const long long num, std::string& res, const char c)
-{
-	size_t pos = 0;
-	const char pr[3] = { '%', c, '\0' };
-	if ((pos = res.find(pr)) == std::string::npos)
-		return;
-	int count = 1;
-	for (size_t i = pos + 2; i < res.size(); i++)
-		if (res[i] == c)
-			count++;
-	std::string newV = std::to_string(abs(num));
-	while (newV.size() < count)
-		newV = '0' + newV;
-	if (num < 0)
-		newV = '-' + newV;
-	res.replace(pos, count + 1, newV);
-}
-
-static float UTCOneCall()
-{
-	time_t now = time(nullptr);
-	tm localTime1, localTime2;
-	localtime_s(&localTime1, &now);
-	gmtime_s(&localTime2, &now);
-	if (localTime1.tm_hour == 0)
-		localTime1.tm_hour = 24;
-	if (localTime2.tm_hour == 0)
-		localTime2.tm_hour = 24;
-	return
-		((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
-			(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
-}
-static float UTC()
-{
-	const static float res = UTCOneCall();
-	return res;
-}
+#include"DateTimeHelpers.hpp"
 
 namespace dt
 {
-	inline constexpr bool Leap(const long long year)
+	inline const bool Leap(const long long year)
 	{
 		return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
 	}
@@ -108,14 +53,14 @@ namespace dt
 	void Date::Assign(const std::string& date)
 	{
 		long long arr[3] = { 1,1,1 };
-		fillFromStrDate(date.c_str(), arr);
+		fillFromStrDT(date.c_str(), arr, 3);
 
 		Date::DatePoint p;
 		p.ad = arr[0] > 0;
 		arr[0] = std::abs(arr[0]);
 
-		p.day = arr[0];
-		p.month = arr[1];
+		p.day = toUShort(arr[0]);
+		p.month = toUShort(arr[1]);
 		p.year = arr[2];
 
 		Assign(p);
@@ -123,7 +68,7 @@ namespace dt
 	void Date::Assign(const std::string& date, const std::string& example)
 	{
 		long long arr[3] = { 1,1,1 };
-		fillFromStrDate(date.c_str(), arr);
+		fillFromStrDT(date.c_str(), arr, 3);
 		const char* exmpl = example.c_str();
 		long long d = 1, m = 1, y = 1;
 		for (char i = 0; i < 3 && *exmpl != '\0'; i++)
@@ -141,8 +86,8 @@ namespace dt
 		p.ad = d > 0;
 		d = std::abs(d);
 
-		p.day = d;
-		p.month = m;
+		p.day = toUShort(d);
+		p.month = toUShort(m);
 		p.year = y;
 
 		Assign(p);
@@ -160,7 +105,7 @@ namespace dt
 		Round();
 	}
 
-	constexpr bool Date::IsLeap() const
+	bool Date::IsLeap() const
 	{
 		return Leap(point.year);
 	}
@@ -207,18 +152,18 @@ namespace dt
 	{
 		return static_cast<int>(std::abs(days) / 7);
 	}
-	DayWeek				Date::GetDayWeek()			const
+	unsigned short		Date::GetDayWeek()			const
 	{
 		if (days >= 0)
-			return static_cast<DayWeek>(days % 7 + 1);
+			return days % 7 + 1;
 		else
-			return  static_cast<DayWeek>(8 - ((std::abs(days) - 1) % 7 + 1));
+			return  8 - ((std::abs(days) - 1) % 7 + 1);
 	}
 	unsigned short		Date::GetCountDaysInMonth()	const
 	{
 		return IsLeap() ? days_in_months_leap[point.month - 1] : days_in_months[point.month - 1];
 	}
-	const Date::DatePoint&	Date::GetDatePoint()		const
+	const Date::DatePoint&	Date::GetDatePoint()	const
 	{
 		return point;
 	}
@@ -243,9 +188,9 @@ namespace dt
 	}
 	std::string Date::ToString(std::string example) const
 	{
-		fillStrDate(point.day, example, 'D');
-		fillStrDate(point.month, example, 'M');
-		fillStrDate(point.year, example, 'Y');
+		fillStrDT(point.day, example, 'D');
+		fillStrDT(point.month, example, 'M');
+		fillStrDT(point.year, example, 'Y');
 		return example;
 	}
 
@@ -327,15 +272,11 @@ namespace dt
 
 	Date Date::UnixNow()
 	{
-		long long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		long long days = now / 86400 + 719162;
-		return Date(days);
+		return Date(GetNowDays());
 	}
 	Date Date::SystemNow()
 	{
-		long long now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count() + static_cast<long long>(UTC() * 3600);
-		long long days = now / 86400 + 719162;
-		return Date(days);
+		return Date(GetNowDays() + 719162);
 	}
 	Date Date::MaxDate()
 	{
@@ -398,8 +339,7 @@ namespace dt
 	}
 	std::string Date::TimeZoneName()
 	{
-		const static std::string res(std::chrono::current_zone()->name().begin(), std::chrono::current_zone()->name().end());
-		return res;
+		return GetTimeZoneInfo();
 	}
 
 	#pragma endregion

@@ -1,52 +1,6 @@
 #include "Time.hpp"
 
-#include<chrono>
-
-void fillFromStrTime(const char* time, unsigned short arr[6])
-{
-	if (time == nullptr) {
-		return;
-	}
-	for (char DateCount = 0; DateCount < 6; DateCount++) {
-		if (time[0] == '\0') {
-			break;
-		}
-		arr[DateCount] = atoi(time);
-		if (time[0] == '-') {
-			time++;
-		}
-		for (; (time[0] >= '0' && time[0] <= '9'); time++) {}
-		time++;
-	}
-}
-void fillStrTime(const unsigned short num, std::string& res, const char c)
-{
-	size_t pos;
-	const char pr[3] = { '%', c, '\0' };
-	if ((pos = res.find(pr)) == std::string::npos)
-		return;
-	int count = 1;
-	for (size_t i = pos + 2; i < res.size(); i++)
-		if (res[i] == c)
-			count++;
-	std::string newV = std::to_string(abs(num));
-	while (newV.size() < count)
-		newV = '0' + newV;
-	if (num < 0)
-		newV = '-' + newV;
-	res.replace(pos, count + 1, newV);
-}
-
-static float UTCOnceCall()
-{
-	time_t now = time(nullptr);
-	tm localTime1, localTime2;
-	localtime_s(&localTime1, &now);
-	gmtime_s(&localTime2, &now);
-	return
-		((localTime1.tm_hour * 3600 + localTime1.tm_min * 60 + localTime1.tm_sec) -
-			(localTime2.tm_hour * 3600 + localTime2.tm_min * 60 + localTime2.tm_sec)) / 3600.f;
-}
+#include"DateTimeHelpers.hpp"
 
 namespace dt
 {
@@ -94,31 +48,41 @@ namespace dt
 	}
 	void Time::Assign(const std::string& time)
 	{
-		unsigned short arr[6] = {};
-		fillFromStrTime(time.c_str(), arr);
-		Assign(Time::TimePoint{arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]});
+		long long arr[6] = {};
+		fillFromStrDT(time.c_str(), arr, 6);
+		Assign(Time::TimePoint{ toUShort(arr[0]), toUShort(arr[1]), toUShort(arr[2]), toUShort(arr[3]), toUShort(arr[4]), toUShort(arr[5])});
 	}
 	void Time::Assign(const std::string& time, const std::string& example)
 	{
-		unsigned short arr[6] = {};
-		fillFromStrTime(time.c_str(), arr);
-		int h = 0, m = 0, s = 0, mi = 0;
-
-		const char* prExampl = example.c_str();
-
-		for (char i = 0; i < 3 && *prExampl != '\0'; i++)
+		long long arr[6] = { 1,1,1,0,0,0 };
+		fillFromStrDT(time.c_str(), arr, 6);
+		const char* exmpl = example.c_str();
+		long long h = 0, mi = 0, s = 0, mil = 0, mic = {}, nan = {};
+		for (auto i = 0; i < 7 && *exmpl != '\0'; i++)
 		{
-			while (*prExampl != '\0' && *prExampl++ != '%') {}
-			if (*prExampl == 'h')
+			while (*exmpl != '\0' && *exmpl++ != '%') {}
+			if (*exmpl == 'h')
 				h = arr[i];
-			else if (*prExampl == 'm')
-				m = arr[i];
-			else if (*prExampl == 's')
-				s = arr[i];
-			else if (*prExampl == 'S')
+			else if (*exmpl == 'm')
 				mi = arr[i];
+			else if (*exmpl == 's')
+				s = arr[i];
+			else if (*exmpl == 'S')
+				mil = arr[i];
+			else if (*exmpl == 'C')
+				mic = arr[i];
+			else if (*exmpl == 'N')
+				nan = arr[i];
 		}
-		Assign(Time::TimePoint{ arr[0], arr[1], arr[2], arr[3], arr[4], arr[5] });
+
+		Time::TimePoint tp;
+		tp.hours = h;
+		tp.minutes = mi;
+		tp.milliseconds = mil;
+		tp.microseconds = mic;
+		tp.nanoseconds = nan;
+
+		Assign(tp);
 	}
 
 	const long long int Time::GetAllNanoseconds() const
@@ -225,12 +189,12 @@ namespace dt
 	}
 	std::string Time::ToString(std::string example) const
 	{
-		fillStrTime(point.hours, example, 'h');
-		fillStrTime(point.minutes, example, 'm');
-		fillStrTime(point.seconds, example, 's');
-		fillStrTime(point.milliseconds, example, 'S');
-		fillStrTime(point.microseconds, example, 'C');
-		fillStrTime(point.nanoseconds, example, 'N');
+		fillStrDT(point.hours, example, 'h');
+		fillStrDT(point.minutes, example, 'm');
+		fillStrDT(point.seconds, example, 's');
+		fillStrDT(point.milliseconds, example, 'S');
+		fillStrDT(point.microseconds, example, 'C');
+		fillStrDT(point.nanoseconds, example, 'N');
 		return example;
 	}
 
@@ -314,15 +278,12 @@ namespace dt
 	Time Time::SystemNow()
 	{
 		return Time(
-			std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() +
-			static_cast<long long int>(SystemUTC()) * (MAX_NANOSECONDS_VALUE / 24)
+			GetNowNanoseconds() + static_cast<long long int>(SystemUTC()) * (MAX_NANOSECONDS_VALUE / 24)
 		);
 	}
 	Time Time::UnixNow()
 	{
-		return Time(
-			(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
-		);
+		return Time(GetNowNanoseconds());
 	}
 	Time Time::MaxTime()
 	{
@@ -334,8 +295,7 @@ namespace dt
 	}
 	float Time::SystemUTC()
 	{
-		static const float res = UTCOnceCall();
-		return res;
+		return GetSystemUTC();
 	}
 
 	void Time::Round()
@@ -388,8 +348,8 @@ namespace dt
 	}
 
 	void Sleep(const long long int nanoseconds) {
-		long long t = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count() + nanoseconds;
-		while (t > std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {}
+		long long t = GetNowNanoseconds() + nanoseconds;
+		while (t > GetNowNanoseconds()) {}
 	}
 	void Sleep(const Time& time) {
 		return Sleep(time.GetAllNanoseconds());
